@@ -239,8 +239,8 @@ final class ProcessManager: ObservableObject {
         let timestamp = DateFormatter.logFormatter.string(from: Date())
         logs.append("[\(timestamp)] \(message)")
         
-        if logs.count > 1000 {
-            logs.removeFirst(logs.count - 500)
+        if logs.count > 300 {
+            logs.removeFirst(logs.count - 200)
         }
     }
     

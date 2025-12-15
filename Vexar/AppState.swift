@@ -22,7 +22,7 @@ final class AppState: ObservableObject {
     
     // MARK: - Logs
     @Published var logs: [String] = []
-    private let maxLogLines = 500
+    private let maxLogLines = 200
     
     // MARK: - Managers
     let processManager: ProcessManager
@@ -41,7 +41,13 @@ final class AppState: ObservableObject {
         Task {
             await updateManager.checkForUpdates()
         }
+        
+        // Ensure safe cleanup on app exit
+        NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.disconnect()
+        }
     }
+
     
     private func setupBindings() {
         // Forward process logs to app state

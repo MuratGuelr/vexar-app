@@ -9,7 +9,7 @@ struct LogsView: View {
     var body: some View {
         ZStack {
             // 1. Shared Living Background
-            AnimatedMeshBackground(statusColor: .vexarOrange) // Orange for "Debug/Logs" vibe
+            AnimatedMeshBackground(statusColor: .vexarOrange, isVisible: true) // Orange for "Debug/Logs" vibe
             
             // 2. Glass Overlay (Darker for readability)
             Rectangle()
@@ -33,15 +33,6 @@ struct LogsView: View {
                         .foregroundStyle(.white)
                     
                     Spacer()
-                    
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundStyle(.white.opacity(0.6))
-                    }
-                    .buttonStyle(.plain)
                 }
                 .padding(16)
                 .background(.ultraThinMaterial)
@@ -132,7 +123,6 @@ struct LogsView: View {
             Color.clear.preference(key: ViewHeightKey.self, value: min(max(contentHeight, 300), 550))
         })
         .preferredColorScheme(.dark)
-        .navigationBarBackButtonHidden(true)
     }
     
     private func logColor(for message: String) -> Color {

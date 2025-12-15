@@ -1,105 +1,144 @@
-# Vexar - macOS DPI Bypasser GUI
+# 🚀 Vexar for macOS
 
-![Vexar Banner](https://via.placeholder.com/1200x500.png?text=Vexar+App) 
-*(Örnek görsel)*
+> **Discord erişim engellerini aşmak için tasarlanmış, modern ve kullanımı kolay menü çubuğu asistanı.**
 
-**Vexar**, macOS için geliştirilmiş, **SpoofDPI** altyapısını kullanan modern, şık ve güçlü bir menü çubuğu (menu bar) uygulamasıdır. İnternet servis sağlayıcılarının uyguladığı DPI (Deep Packet Inspection) filtrelerini aşmanızı ve sansürsüz, yavaşlatılmamış bir internet deneyimi yaşamanızı sağlar.
-
-Sadece işlevsel değil, aynı zamanda **"Digital Core"** tasarım diliyle görsel olarak zenginleştirilmiş, animasyonlu ve yüksek kaliteli bir kullanıcı deneyimi sunar.
-
----
-
-## 🌟 Özellikler
-
-### 🎨 Modern "Digital Core" Tasarım
-- **Living Background**: Uygulama genelinde sürekli hareket eden, canlı ve dinamik renk değiştiren mesh gradient arka plan.
-- **Pulse Core**: Bağlantı durumunu gösteren, dönen halkalar ve neon efektleriyle donatılmış merkezi durum reaktörü.
-- **Glassmorphism**: Ayarlar ve menülerde kullanılan yarı saydam, bulanık cam efektleri (frosted glass).
-- **Haptic Animations**: Düğmeler ve geçişlerde kullanılan fizik tabanlı yay (spring) animasyonları.
-
-### 🚀 Güçlü Altyapı
-- **SpoofDPI Entegrasyonu**: Arkada güçlü `spoofdpi` motorunu kullanarak DPI engellerini aşar.
-- **Akıllı Yönetim**: SpoofDPI ve Homebrew kurulumunu otomatik algılar ve henüz yüklü değilse sizi yönlendirir.
-- **Dinamik Pencere**: İçeriğe göre otomatik boyutlanan, akıcı arayüz.
-
-### 🛠 Kullanıcı Dostu Araçlar
-- **Menu Bar Resident**: Menü çubuğunuzda sessizce çalışır, tek bir tıkla erişilir.
-- **Tek Tıkla Bağlantı**: Büyük, belirgin güç düğmesiyle anında aktivasyon.
-- **Sistem Logları**: Arka planda neler olduğunu şeffaf bir şekilde görebileceğiniz "Matrix" stili log ekranı.
-- **Başlangıçta Çalıştırma**: Bilgisayarınız açıldığında Vexar'ın otomatik başlamasını sağlayan seçenek.
+[![Platform](https://img.shields.io/badge/Platform-macOS%2012%2B-blue.svg)](https://www.apple.com/macos)
+[![Architecture](https://img.shields.io/badge/Architecture-Intel%20%7C%20Apple%20Silicon-green.svg)](https://www.apple.com/mac)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
-## 📸 Ekran Görüntüleri
+## 📋 İçindekiler
 
-| Ana Ekran (Bağlı Değil) | Ana Ekran (Bağlı) | Ayarlar |
-|:---:|:---:|:---:|
-| *Pulse Core yavaşça döner, arka plan sakindir.* | *Core parlar, kalkan aktifleşir.* | *Cam efektli kartlar ve modern toggle.* |
-
-> *Arayüz tasarımı, macOS'in estetiğine uyum sağlarken futuristik bir dokunuş ekler.*
-
----
-
-## ⚙️ Gereksinimler
-
-- **macOS**: macOS 13.0 (Ventura) ve üzeri.
-- **Mimari**: Apple Silicon (M1/M2/M3) veya Intel işlemcili Mac'ler.
-- **Bağımlılıklar**: 
-  - Uygulama, çalışma zamanında `Homebrew` ve `spoofdpi`'nin yüklü olmasını bekler.
-  - Eğer yüklü değilse, uygulama içinde sizi kurulum adımlarına yönlendirecektir.
+- [Özellikler](#-özellikler)
+- [Nasıl Çalışır](#-nasıl-çalışır)
+- [Sistem Gereksinimleri](#-sistem-gereksinimleri)
+- [Kurulum](#-kurulum)
+- [Kullanım](#-kullanım)
+- [Geliştirici](#-geliştirici)
+- [Destek](#-destek)
+- [Sorumluluk Reddi](#-sorumluluk-reddi)
 
 ---
 
-## 📥 Kurulum (Geliştiriciler İçin)
+## ✨ Özellikler
 
-Projeyi kendi bilgisayarınızda derlemek ve çalıştırmak için:
+Vexar, karmaşık terminal komutlarıyla uğraşmadan Discord'u güvenli bir şekilde kullanmanızı sağlayan native bir macOS uygulamasıdır.
 
-1. **Repoyu Klonlayın:**
-   ```bash
-   git clone https://github.com/MuratGuelr/vexar-app.git
-   cd vexar-app
-   ```
+### 🎯 Temel Özellikler
 
-2. **Projeyi Xcode ile Açın:**
-   `Vexar.xcodeproj` dosyasını çift tıklayarak açın.
+- **Menü Çubuğu Entegrasyonu**: Her zaman elinizin altında, sistem kaynaklarını yormayan hafif tasarım.
+- **Tek Tıkla Bağlantı**: "Bağlan" butonuna tıklayarak Discord'u proxy modunda başlatın.
+- **Otomatik Bağımlılık Yönetimi**: Homebrew ve SpoofDPI kurulu değilse sizin yerinize kurar ve yapılandırır.
+- **Akıllı Süreç Yönetimi**: Discord zaten açıksa otomatik olarak kapatıp proxy ile yeniden başlatır.
+- **Sistem Durumu İzleme**: Bağlantı durumunu ve arka plan servislerini anlık olarak takip eder.
 
-3. **Derleyin ve Çalıştırın:**
-   Xcode üzerinden `Run` (⌘R) butonuna basın.
+### 🎨 Modern Arayüz
+
+- **Premium Tasarım**: Glassmorphism efektleri ve akıcı animasyonlar.
+- **Karanlık Mod**: Göz yormayan, işletim sistemiyle uyumlu koyu tema.
+- **Canlı Loglar**: İşlemleri detaylıca görebileceğiniz entegre log görüntüleyici.
 
 ---
 
 ## 🔧 Nasıl Çalışır?
 
-Vexar, temel olarak bir arayüz (GUI) katmanıdır. Arka planda `Process` yönetimi ile terminal komutlarını çalıştırır.
+Vexar, arka planda güvenilir araçları kullanarak Discord trafiğini optimize eder:
 
-1. **Bağlan Butonu**: Bastığınızda Vexar, arka planda `spoofdpi` komutunu çalıştırır.
-2. **Proxy Ayarları**: SpoofDPI varsayılan olarak `8080` numaralı portta bir SOCKS proxy oluşturur.
-3. **Loglama**: `stdOut` ve `stdErr` çıktılarını yakalar ve `LogsView` ekranında renklendirilmiş olarak gösterir.
-4. **Durum Takibi**: Bağlantının kopması veya hatası durumunda arayüz anında güncellenir.
-
----
-
-## 🏗 Proje Yapısı
-
-- **`VexarApp.swift`**: Uygulamanın giriş noktası. Menu bar popover yönetimini yapar.
-- **`MenuBarView.swift`**: Ana arayüz. "Pulse Core" animasyonu ve bağlantı butonu buradadır.
-- **`SettingsView.swift`**: Ayarlar ekranı. Başlangıçta çalıştırma ve detaylar.
-- **`LogsView.swift`**: Canlı sistem loglarını gösteren ekran.
-- **`AppState.swift`**: Uygulamanın durumunu (bağlı/bağlı değil, loglar) yöneten merkezi "State Object".
-- **`HomebrewManager.swift`**: Sistem bağımlılıklarını (Brew/SpoofDPI) kontrol eden yönetici sınıf.
+1. **Proxy Servisi**: `spoofdpi` aracını yerel bir portta (örn. 8080) çalıştırır.
+2. **Discord Başlatma**: Resmi Discord uygulamasını `--proxy-server="http://127.0.0.1:PORT"` parametresiyle başlatır.
+3. **Otomasyon**: Tüm bu süreci tek bir butona indirger ve karmaşık terminal işlemlerini ortadan kaldırır.
 
 ---
 
-## 👨‍💻 Geliştirici
+## 💻 Sistem Gereksinimleri
 
-**ConsolAktif**
-- YouTube: [ConsolAktif](https://www.youtube.com/@ConsolAktif)
-- GitHub: [MuratGuelr](https://github.com/MuratGuelr)
+- **İşletim Sistemi**: macOS 12 (Monterey) veya üstü
+- **Mimar**: Intel (x86_64) veya Apple Silicon (M1/M2/M3/M4)
+- **Discord**: `/Applications/Discord.app` konumunda kurulu olmalıdır.
+- **İnternet**: İlk kurulumda Homebrew ve SpoofDPI indirmek için gereklidir.
 
-Bu proje açık kaynaklıdır ve katkılara açıktır.
+---
+
+## 🚀 Kurulum
+
+1. **İndirin**: Projenin [Releases](https://github.com/MuratGuelr/vexar-app/releases) sayfasından son sürümü indirin.
+2. **Uygulamayı Taşıyın**: `Vexar.app` dosyasını `Uygulamalar` klasörüne sürükleyin.
+3. **İlk Açılış**: Uygulamayı açın. İlk açılışta gerekli izinleri isteyecektir.
+   - *Not: Eğer Homebrew veya SpoofDPI sisteminizde yoksa, Vexar bunları kurmak için sizden onay isteyecek ve kurulumu Terminal üzerinden şeffaf bir şekilde yapacaktır.*
+
+---
+
+## 🎮 Kullanım
+
+1. Menü çubuğundaki **Vexar** ikonuna tıklayın.
+2. Açılan pencerede **"BAĞLAN"** butonuna basın.
+3. Vexar şunları yapacaktır:
+   - Gerekirse arka plandaki servisleri başlatacak.
+   - Açık olan Discord uygulamasını kapatacak.
+   - Discord'u proxy ayarlarıyla yeniden açacak.
+4. Bağlantıyı kesmek ve Discord'u normal moda döndürmek için tekrar **"BAĞLANTIYI KES"** butonuna basmanız yeterlidir.
+
+---
+
+## 🛠 Geliştirme
+
+Projeyi yerel ortamınızda geliştirmek için:
+
+```bash
+git clone https://github.com/MuratGuelr/vexar-app.git
+cd vexar-app
+open Vexar.xcodeproj
+```
+
+Xcode üzerinden projeyi build edip çalıştırabilirsiniz.
+
+---
+
+## � Destek
+
+Bu proje açık kaynaklıdır ve topluluk desteğiyle geliştirilmektedir. Destek olmak isterseniz:
+
+**GitHub Sponsor:**
+
+[![Sponsor](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/MuratGuelr)
+
+**Patreon:**
+
+[![Patreon](https://img.shields.io/badge/MuratGuelr-purple?logo=patreon&label=Patreon)](https://www.patreon.com/posts/splitwire-for-v1-140359525)
 
 ---
 
 ## 📄 Lisans
 
-Bu proje MIT Lisansı ile lisanslanmıştır. Detaylar için `LICENSE` dosyasına bakabilirsiniz.
+```
+Copyright © 2025 ConsolAktif
+
+MIT License ile lisanslanmıştır.
+Detaylar için LICENSE dosyasına bakın.
+```
+
+---
+
+## ⚖️ Sorumluluk Reddi
+
+> [!IMPORTANT]
+> **Bu yazılım eğitim ve erişilebilirlik amaçlı oluşturulmuştur.**
+
+- ✅ Kodlama eğitimi ve kişisel kullanım için tasarlanmıştır.
+- ❌ Ticari kullanım garantisi verilmez.
+- ⚠️ Geliştirici, kullanımdan doğabilecek zararlardan sorumlu değildir.
+- 📚 Kullanıcılar bu yazılımı kendi sorumlulukları altında kullanırlar.
+- ⚖️ Bu araç sadece DPI kısıtlamalarını aşmak için yerel bir proxy oluşturur; verilerinizi kaydetmez veya izlemez.
+
+**Yasal Uyarı:** Bu programın kullanımından doğan her türlü yasal sorumluluk kullanıcıya aittir. Uygulama yalnızca eğitim ve araştırma amaçları ile geliştirilmiştir.
+
+---
+
+<div align="center">
+
+**🚀 Vexar ile kesintisiz iletişim.**
+
+Made with ❤️ by [ConsolAktif](https://github.com/MuratGuelr)
+
+</div>

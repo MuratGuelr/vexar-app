@@ -15,7 +15,7 @@ struct SettingsView: View {
     var body: some View {
         ZStack {
             // 1. Shared Living Background
-            AnimatedMeshBackground(statusColor: .vexarBlue)
+            AnimatedMeshBackground(statusColor: .vexarBlue, isVisible: true)
             
             // 2. Glass Overlay
             Rectangle()
@@ -40,15 +40,6 @@ struct SettingsView: View {
                         .foregroundColor(.white)
                     
                     Spacer()
-                    
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(.white.opacity(0.6))
-                    }
-                    .buttonStyle(.plain)
                 }
                 .padding(20)
                 .background(.ultraThinMaterial) // Header glass
@@ -211,7 +202,7 @@ struct SettingsView: View {
                                 HStack {
                                     Image(systemName: "server.rack")
                                         .foregroundColor(.vexarGreen)
-                                    Text("Motor Durumu")
+                                    Text("Eklenti Durumu")
                                         .font(.system(size: 13))
                                         .foregroundColor(.white.opacity(0.8))
                                     Spacer()

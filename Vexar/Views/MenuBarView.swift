@@ -9,14 +9,13 @@ struct MenuBarView: View {
     @State private var windowHeight: CGFloat = 520
     
     // Animation States
-    @State private var breathing: Bool = false
-    @State private var rotation: Double = 0
+    @State private var isVisible: Bool = false
     
     var body: some View {
         NavigationStack {
             ZStack {
                 // 1. Living Background
-                AnimatedMeshBackground(statusColor: statusColor)
+                AnimatedMeshBackground(statusColor: statusColor, isVisible: isVisible)
                 
                 // 2. Glass Overlay (Frosted effect)
                 Rectangle()
@@ -69,13 +68,15 @@ struct MenuBarView: View {
                     PulseCoreView(
                         isConnected: appState.isConnected,
                         isConnecting: appState.isConnecting,
-                        color: statusColor
+                        color: statusColor,
+                        isVisible: isVisible
                     )
                     .frame(height: 220)
                     .contentShape(Rectangle()) // Hit testing area
                     .onTapGesture {
                         toggleConnection()
                     }
+                    .drawingGroup() // Offload composite rendering to GPU
                     
                     Spacer()
                     
@@ -92,7 +93,7 @@ struct MenuBarView: View {
                     Button(action: toggleConnection) {
                         HStack {
                             Image(systemName: "power")
-                                .font(.system(size: 20, weight: .bold))
+                            .font(.system(size: 20, weight: .bold))
                             Text(appState.isConnected ? "BAĞLANTIYI KES" : "BAĞLAN")
                                 .font(.system(size: 14, weight: .bold, design: .monospaced))
                         }
@@ -182,6 +183,8 @@ struct MenuBarView: View {
                 }
             }
         }
+        .onAppear { isVisible = true }
+        .onDisappear { isVisible = false }
     }
     
     // Logic
@@ -215,91 +218,84 @@ struct PulseCoreView: View {
     let isConnected: Bool
     let isConnecting: Bool
     let color: Color
+    var isVisible: Bool // Gating binding
     
     @State private var rotation: Double = 0
     @State private var pulse: CGFloat = 1.0
     
     var body: some View {
         ZStack {
-            // Background Glow
-            Circle()
-                .fill(color.opacity(0.1))
-                .blur(radius: 40)
-                .frame(width: 180, height: 180)
-            
-            // Outer Ring (Rotating)
-            Circle()
-                .trim(from: 0, to: 0.7)
-                .stroke(
-                    AngularGradient(colors: [color.opacity(0), color], center: .center),
-                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
-                )
-                .frame(width: 160, height: 160)
-                .rotationEffect(.degrees(rotation))
-                .animation(.linear(duration: isConnecting ? 1 : 4).repeatForever(autoreverses: false), value: rotation)
-            
-            // Inner Ring (Counter Rotating)
-            Circle()
-                .trim(from: 0, to: 0.6)
-                .stroke(
-                    AngularGradient(colors: [color, color.opacity(0)], center: .center),
-                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
-                )
-                .frame(width: 120, height: 120)
-                .rotationEffect(.degrees(-rotation * 1.5))
             
             // Core
-            ZStack {
-                Circle()
-                    .fill(color.opacity(0.2))
-                    .frame(width: 80, height: 80)
+            VStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(color.opacity(0.2))
+                        .frame(width: 80, height: 80)
+                    
+                    Circle()
+                        .stroke(color.opacity(0.5), lineWidth: 1)
+                        .frame(width: 80, height: 80)
+                    
+                    Image(systemName: isConnected ? "shield.fill" : "shield.slash.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(color)
+                        .shadow(color: color, radius: 10)
+                        .scaleEffect(pulse)
+                }
                 
-                Circle()
-                    .stroke(color.opacity(0.5), lineWidth: 1)
-                    .frame(width: 80, height: 80)
-                
-                Image(systemName: isConnected ? "shield.fill" : "shield.slash.fill")
-                    .font(.system(size: 32))
-                    .foregroundColor(color)
-                    .shadow(color: color, radius: 10)
-                    .scaleEffect(pulse)
+                VStack(spacing: 4) {
+                    Text(isConnected ? "GÜVENLİ" : (isConnecting ? "BAĞLANIYOR..." : "HAZIR"))
+                        .font(.system(size: 14, weight: .heavy, design: .monospaced))
+                        .foregroundStyle(color)
+                        .shadow(color: color.opacity(0.5), radius: 6)
+                    
+                    Text(isConnected ? "Discord'u sorunsuzca kullanabilirsiniz." : "DPI Bypass için bağlanın.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                        .frame(width: 200)
+                }
+                .offset(y: 10)
             }
         }
         .onAppear {
-            rotation = 360
-            withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
-                pulse = 1.1
+            if isVisible {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
+                        pulse = 1.1
+                    }
+                }
             }
         }
     }
 }
 
-struct AnimatedMeshBackground: View {
+struct AnimatedMeshBackground: View { // Renamed internally to ModernBackground but kept name to avoid breaking other files
     let statusColor: Color
-    @State private var animate = false
+    var isVisible: Bool // Kept for compatibility but unused
     
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
             
-            // Orb 1 (Centered, gentle float)
-            Circle()
-                .fill(statusColor.opacity(0.3))
-                .frame(width: 300, height: 300)
-                .blur(radius: 60)
-                .offset(x: animate ? -40 : 40, y: animate ? -20 : 20)
+            // Premium Static Gradient
+            RadialGradient(
+                gradient: Gradient(colors: [
+                    statusColor.opacity(0.15),
+                    statusColor.opacity(0.05),
+                    Color.black
+                ]),
+                center: .center,
+                startRadius: 5,
+                endRadius: 300
+            )
+            .ignoresSafeArea()
             
-            // Orb 2 (Centered, counter float)
-            Circle()
-                .fill(Color.purple.opacity(0.2))
-                .frame(width: 250, height: 250)
-                .blur(radius: 50)
-                .offset(x: animate ? 40 : -40, y: animate ? 20 : -20)
-        }
-        .onAppear {
-            withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
-                animate = true
-            }
+            // Subtle Noise Texture (Optional, for premium feel)
+            Rectangle()
+                .fill(.white.opacity(0.02))
+                .blendMode(.overlay)
         }
     }
 }

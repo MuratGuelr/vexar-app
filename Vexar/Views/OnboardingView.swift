@@ -12,7 +12,7 @@ struct OnboardingView: View {
     
     var body: some View {
         ZStack {
-            AnimatedMeshBackground(statusColor: Color.vexarBlue)
+            AnimatedMeshBackground(statusColor: Color.vexarBlue, isVisible: true)
             
             Rectangle()
                 .fill(.ultraThinMaterial)
@@ -61,24 +61,6 @@ struct OnboardingView: View {
     private var headerSection: some View {
         VStack(spacing: 24) {
             ZStack {
-                Circle()
-                    .strokeBorder(
-                        AngularGradient(colors: [Color.vexarBlue.opacity(0), Color.vexarBlue.opacity(0.6), Color.vexarBlue.opacity(0)], center: .center),
-                        lineWidth: 3
-                    )
-                    .frame(width: 90, height: 90)
-                    .rotationEffect(.degrees(animateBg ? 360 : 0))
-                    .animation(.linear(duration: 8).repeatForever(autoreverses: false), value: animateBg)
-                
-                Circle()
-                    .strokeBorder(
-                        AngularGradient(colors: [Color.vexarGreen.opacity(0), Color.vexarGreen.opacity(0.5), Color.vexarGreen.opacity(0)], center: .center),
-                        lineWidth: 2
-                    )
-                    .frame(width: 70, height: 70)
-                    .rotationEffect(.degrees(animateBg ? -360 : 0))
-                    .animation(.linear(duration: 12).repeatForever(autoreverses: false), value: animateBg)
-
                 Image("VexarLogo")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -89,7 +71,7 @@ struct OnboardingView: View {
             .padding(.top, 10)
             
             VStack(spacing: 8) {
-                Text("VEXAR 1.0")
+                Text("VEXAR")
                     .font(.system(size: 28, weight: .heavy, design: .default))
                     .tracking(2)
                     .foregroundColor(.white)
@@ -107,7 +89,7 @@ struct OnboardingView: View {
                     )
             }
             
-            Text("Sınırsız internet deneyimine başlamak için\ngerekli bileşenleri kuralım.")
+            Text("VEXAR ile internet deneyimine başlamak için\ngerekli bileşenleri kuralım.")
                 .font(.system(size: 13))
                 .foregroundColor(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
