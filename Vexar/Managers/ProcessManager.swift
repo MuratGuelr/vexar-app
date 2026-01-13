@@ -62,12 +62,12 @@ final class ProcessManager: ObservableObject {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: binaryPath)
         
-        // Correct SpoofDPI arguments:
-        // --listen-port int: Port number to listen on (default: 8080)
-        // --log-level string: Set log level (default: 'info')
+        // SpoofDPI v1.2.1 arguments:
+        // --listen-addr string: IP address and port to listen on (default: 127.0.0.1:8080)
+        // --log-level string: Set log level (default: "info")
         // --system-proxy bool: Automatically set system-wide proxy configuration
         process.arguments = [
-            "--listen-port", String(port),
+            "--listen-addr", "127.0.0.1:\(port)",
             "--log-level", "info",
             "--system-proxy"
         ]
