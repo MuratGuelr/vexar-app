@@ -3,28 +3,47 @@
 /* App */
 "app_name" = "VEXAR";
 "version" = "v1.0";
+"system_ready" = "Sistem Hazır";
+"quitting_title" = "Kapatılıyor...";
+"status_cleaning" = "Bağlantılar kontrol ediliyor...";
+"status_stopping_service" = "SpoofDPI servisi durduruluyor...";
+"status_cleanup_temp" = "Geçici dosyalar temizleniyor...";
+"status_goodbye" = "Hoşçakalın! 👋";
 
 /* Connection Status */
-"status_connected" = "Bağlandı";
-"status_disconnected" = "Bağlantı Kesildi";
+"status_connected" = "Güvenli";
+"status_disconnected" = "Pasif";
 "status_connecting" = "Bağlanıyor...";
 "port_label" = "Port: %@";
 
+/* Status Messages */
+"status_secure_message" = "Discord'u sorunsuzca kullanabilirsiniz.";
+"status_ready_message" = "DPI Bypass için bağlanın.";
+
 /* Buttons */
-"connect" = "Bağlan";
-"disconnect" = "Bağlantıyı Kes";
+"connect" = "BAĞLAN";
+"disconnect" = "BAĞLANTIYI KES";
 "launch_discord" = "Discord'u Başlat";
-"settings" = "Ayarlar";
-"logs" = "Loglar";
-"quit" = "Çıkış";
+"settings" = "AYARLAR";
+"logs" = "LOGLAR";
+"quit" = "ÇIKIŞ";
+
+/* Menu Bar */
+"spoofdpi_not_found_warning" = "⚠️ SpoofDPI Bulunamadı";
+"no_internet_warning" = "⚠️ İnternet Yok";
 
 /* Settings */
-"settings_title" = "Ayarlar";
+"settings_title" = "AYARLAR";
 "proxy_port" = "Proxy Portu";
 "apply" = "Uygula";
 "disconnect_to_change" = "Portu değiştirmek için bağlantıyı kesin";
-"launch_at_login" = "Girişte Başlat";
-"launch_at_login_desc" = "Mac açıldığında Vexar'ı otomatik başlat";
+"launch_at_login" = "Başlangıçta Çalıştır";
+"launch_at_login_desc" = "Bilgisayar açıldığında Vexar otomatik başlar.";
+"auto_connect" = "Otomatik Bağlan";
+"auto_connect_desc" = "Uygulama açıldığında veya internet gelince otomatik bağlanır.";
+"dns_opt" = "Hızlandırma (Cloudflare DNS)";
+"dns_opt_desc" = "Daha düşük gecikme için 1.1.1.1 DNS kullanılır. Sorun yaşarsanız kapatın.";
+"latency_label" = "Gecikme: %dms";
 "version_label" = "Sürüm";
 "spoofdpi_status" = "SpoofDPI";
 "installed" = "Kurulu ✓";
@@ -33,37 +52,107 @@
 "invalid_port_message" = "Lütfen geçerli bir port numarası girin (1024-65535)";
 "ok" = "Tamam";
 
+/* Settings - Sections */
+"section_general" = "GENEL";
+"section_automation" = "OTOMASYON";
+"section_privacy" = "GİZLİLİK";
+"section_developer" = "GELİŞTİRİCİ";
+"section_danger_zone" = "TEHLİKELİ BÖLGE";
+
+/* Settings - Analytics */
+"analytics_title" = "Anonim Veri Toplama";
+"analytics_desc" = "Vexar'ın geliştirilmesine katkıda bulunmak için anonim kullanım verilerini paylaşın.";
+"on" = "AÇIK";
+"off" = "KAPALI";
+
+/* Settings - Setup Wizard */
+"setup_wizard" = "Kurulum Sihirbazı";
+"setup_wizard_desc" = "Gerekli bileşenleri tekrar kurun.";
+
+/* Settings - Developer */
+"developer_name" = "ConsolAktif";
+"developer_title" = "Vexar Geliştiricisi";
+"subscribe_youtube" = "YouTube'da Abone Ol";
+
+/* Settings - Uninstall */
+"uninstall_app" = "Uygulamayı Tamamen Kaldır";
+"uninstall_desc" = "Vexar ve bileşenlerini siler.";
+"uninstall_tool_title" = "Vexar Kaldırma Aracı";
+"uninstall_confirmation" = "Bu işlem uygulamayı ve tüm verilerini silecektir.\nSpoofDPI otomatik olarak kaldırılacak, diğer bileşenler için size sorulacaktır.\n\nDevam etmek istiyor musunuz?";
+"uninstall_stopping_services" = "SpoofDPI ve servisler durduruluyor...";
+"uninstall_removing_spoofdpi" = "SpoofDPI kaldırılıyor...";
+"uninstall_ask_discord" = "Discord uygulamasını da kaldırmak ister misiniz?\n(Sadece Vexar ile yüklediyseniz önerilir)";
+"uninstall_removing_discord" = "Discord kaldırılıyor...";
+"uninstall_ask_homebrew" = "Homebrew paket yöneticisini de kaldırmak ister misiniz?\n(Eğer başka geliştirici araçları kullanıyorsanız SAKLAYIN)";
+"uninstall_running_homebrew" = "Homebrew kaldırma betiği çalıştırılıyor...";
+"uninstall_final" = "Vexar temizleniyor...\nHoşçakalın! 👋";
+"yes" = "Evet";
+"no" = "Hayır";
+
 /* Logs */
-"logs_title" = "İşlem Logları";
+"logs_title" = "SİSTEM LOGLARI";
 "auto_scroll" = "Otomatik Kaydır";
 "lines_count" = "%d satır";
-"copy" = "Kopyala";
-"clear" = "Temizle";
+"copy" = "KOPYALA";
+"clear" = "TEMİZLE";
 "no_logs" = "Henüz log yok";
 "no_logs_desc" = "SpoofDPI çıktısını görmek için bağlanın";
 
 /* Onboarding */
 "welcome_title" = "Vexar'a Hoş Geldiniz";
-"welcome_desc" = "Vexar, Discord trafiğini yönlendirmek için SpoofDPI'ya ihtiyaç duyar.";
+"welcome_desc" = "VEXAR ile internet deneyimine başlamak için gerekli bileşenleri kuralım.";
 "spoofdpi_not_found" = "SpoofDPI Bulunamadı";
-"install_spoofdpi" = "SpoofDPI Kur";
-"skip" = "Atla";
+"install_spoofdpi" = "SPOOFDPI İNDİR";
+"skip" = "Şimdilik Atla";
 "cancel" = "İptal";
 "installing_spoofdpi" = "SpoofDPI kuruluyor...";
 "installing_homebrew" = "Homebrew kuruluyor...";
 "install_complete" = "Kurulum tamamlandı!";
+"install_homebrew" = "HOMEBREW KUR";
+"install_discord" = "DISCORD KUR";
+"complete_setup" = "KURULUMU TAMAMLA";
 "homebrew_not_found" = "Homebrew gerekli. Lütfen önce kurun.";
 "install_homebrew_terminal" = "Terminal'de Homebrew Kur";
-"refresh_status" = "Durumu Yenile";
+"refresh_status" = "Yenile";
 "discord_launch_info" = "Discord'u artık dilediğiniz yerden açabilirsiniz.";
 "homebrew_installed" = "Homebrew başarıyla kuruldu!";
 "homebrew_install_failed" = "Homebrew kurulumu başarısız";
 "install_failed" = "Kurulum başarısız";
 "try_again" = "Tekrar Dene";
 "continue" = "Devam Et";
+"spoofdpi_installing_progress" = "SpoofDPI kuruluyor... Lütfen Terminal'i takip edin.";
+"discord_installing_progress" = "Discord kuruluyor... Lütfen Terminal'i takip edin.";
+"homebrew_installing_progress" = "Homebrew kuruluyor... Bu işlem biraz sürebilir.";
+
+/* Quitting */
+"quitting_title" = "Vexar Kapatılıyor";
+"quitting_default" = "Kapatılıyor...";
+"quitting_checking" = "Bağlantılar kontrol ediliyor...";
+"quitting_stopping" = "SpoofDPI servisi durduruluyor...";
+"quitting_cleaning" = "Geçici dosyalar temizleniyor...";
+"quitting_goodbye" = "Hoşçakalın! 👋";
+
+/* Update */
+"update_available_title" = "Yeni Sürüm Mevcut! 🎉";
+"update_version_text" = "Vexar %@ yayınlandı.";
+"update_notes_title" = "Yenilikler:";
+"update_later" = "Daha Sonra";
+"update_download" = "İndir ve Güncelle";
 
 /* Log Messages */
 "log_connected" = "✅ Port %d üzerinden bağlandı";
 "log_disconnected" = "🔌 Bağlantı kesildi";
 "log_discord_launched" = "🎮 Discord proxy port %d ile başlatıldı";
 "log_connection_failed" = "❌ Bağlantı hatası: %@";
+
+/* Notification */
+"notification_title" = "Vexar Çalışıyor";
+"notification_body" = "Uygulama menü çubuğunda aktif. Kontrol etmek için ikona tıklayın.";
+
+/* Status Labels */
+"status_ready" = "HAZIR";
+"status_secure" = "GÜVENLİ";
+"status_no_internet" = "İNTERNET YOK";
+
+/* Manual Install */
+"manual_install_instruction" = "Komut panoya kopyalandı.\nTerminal'i açıp yapıştırın: ⌘V";

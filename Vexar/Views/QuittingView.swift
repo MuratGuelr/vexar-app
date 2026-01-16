@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct QuittingView: View {
-    @ObservedObject var appState = AppState.shared
+    @EnvironmentObject var appState: AppState
     @State private var pulse = false
     @State private var showContent = false
     
@@ -44,7 +44,7 @@ struct QuittingView: View {
                 }
                 
                 VStack(spacing: 8) {
-                    Text("Vexar Kapatılıyor")
+                    Text(String(localized: "quitting_title"))
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.white)
                     

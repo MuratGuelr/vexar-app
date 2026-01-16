@@ -5,6 +5,7 @@ struct LogsView: View {
     @Environment(\.dismiss) private var dismiss
     
     @State private var contentHeight: CGFloat = 200
+    @State private var refreshID = UUID()
     
     var body: some View {
         ZStack {
@@ -27,7 +28,7 @@ struct LogsView: View {
                         .font(.system(size: 16))
                         .foregroundColor(.vexarOrange)
                     
-                    Text("SİSTEM LOGLARI")
+                    Text(String(localized: "logs_title"))
                         .font(.system(size: 14, weight: .heavy, design: .default))
                         .tracking(1)
                         .foregroundStyle(.white)
@@ -41,7 +42,7 @@ struct LogsView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 6) {
-                            ForEach(Array(appState.logs.enumerated()), id: \.offset) { index, message in
+                            ForEach(Array(appState.processManager.logs.enumerated()), id: \.offset) { index, message in
                                 HStack(alignment: .top, spacing: 8) {
                                     Text(String(format: "%03d", index + 1))
                                         .font(.system(size: 9, design: .monospaced))
@@ -54,7 +55,6 @@ struct LogsView: View {
                                         .shadow(color: logColor(for: message).opacity(0.3), radius: 2)
                                 }
                                 .padding(.horizontal, 4)
-                                .id(index)
                             }
                         }
                         .padding(16)
@@ -68,10 +68,11 @@ struct LogsView: View {
                             }
                         }
                     }
-                    .onChange(of: appState.logs.count) { count in
-                        if count > 0 {
+                    .id(refreshID)
+                    .onChange(of: appState.processManager.logs.count) { newCount in
+                        if newCount > 0 {
                             withAnimation {
-                                proxy.scrollTo(count - 1, anchor: .bottom)
+                                proxy.scrollTo(newCount - 1, anchor: .bottom)
                             }
                         }
                     }
@@ -79,10 +80,15 @@ struct LogsView: View {
                 
                 // Footer
                 HStack {
-                    Button(action: { appState.clearLogs() }) {
+                    Button(action: { 
+                        withAnimation {
+                            appState.clearLogs()
+                            refreshID = UUID()
+                        }
+                    }) {
                         HStack(spacing: 6) {
                             Image(systemName: "trash")
-                            Text("TEMİZLE")
+                            Text(String(localized: "clear"))
                                 .font(.system(size: 10, weight: .bold))
                         }
                         .padding(8)
@@ -96,13 +102,13 @@ struct LogsView: View {
                     Spacer()
                     
                     Button(action: {
-                        let text = appState.logs.joined(separator: "\n")
+                        let text = appState.processManager.logs.joined(separator: "\n")
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(text, forType: .string)
                     }) {
                         HStack(spacing: 6) {
                             Image(systemName: "doc.on.doc")
-                            Text("KOPYALA")
+                            Text(String(localized: "copy"))
                                 .font(.system(size: 10, weight: .bold))
                         }
                         .padding(8)

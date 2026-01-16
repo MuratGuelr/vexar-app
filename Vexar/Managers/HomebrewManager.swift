@@ -4,6 +4,8 @@ import AppKit
 /// Manages Homebrew and SpoofDPI installation with Intel/Apple Silicon detection
 @MainActor
 final class HomebrewManager: ObservableObject {
+    static let shared = HomebrewManager()
+    
     @Published var isHomebrewInstalled: Bool = false
     @Published var isSpoofDPIInstalled: Bool = false
     @Published var isInstalling: Bool = false
@@ -65,8 +67,32 @@ final class HomebrewManager: ObservableObject {
     
     /// Get Homebrew path
     func getHomebrewPath() -> String? {
+        // 1. Check standard paths
         let paths = ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"]
-        return paths.first { FileManager.default.fileExists(atPath: $0) }
+        if let found = paths.first(where: { FileManager.default.fileExists(atPath: $0) }) {
+            return found
+        }
+        
+        // 2. Dynamic check (fallback)
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/which")
+        process.arguments = ["brew"]
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        
+        do {
+            try process.run()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !path.isEmpty,
+               FileManager.default.fileExists(atPath: path) {
+                return path
+            }
+        } catch {
+            print("[Vexar] 'which brew' check failed: \(error)")
+        }
+        
+        return nil
     }
     
     /// Get SpoofDPI path
@@ -75,10 +101,32 @@ final class HomebrewManager: ObservableObject {
         return paths.first { FileManager.default.fileExists(atPath: $0) }
     }
     
+    /// Get secure temporary script path
+    private func getTempScriptPath(_ name: String) -> String {
+        return FileManager.default.temporaryDirectory.appendingPathComponent(name).path
+    }
+    
+    /// Clean up temporary installation scripts
+    private func cleanupTempScripts() {
+        let tempScripts = [
+            "vexar_install.sh",
+            "vexar_discord_install.sh",
+            "vexar_homebrew.sh",
+            "vexar_discord_uninstall.sh",
+            "vexar_brew_uninstall.sh",
+            "vexar_self_destruct.sh"
+        ]
+        for script in tempScripts {
+            try? FileManager.default.removeItem(atPath: getTempScriptPath(script))
+        }
+    }
+    
     /// Install SpoofDPI - copies command and opens Terminal
     func installSpoofDPI() async -> Bool {
+        cleanupTempScripts() // Clean up old scripts first
+        
         guard let brewPath = getHomebrewPath() else {
-            installError = "Homebrew bulunamadı"
+            installError = String(localized: "homebrew_not_found")
             return false
         }
         
@@ -93,7 +141,7 @@ final class HomebrewManager: ObservableObject {
         NSPasteboard.general.setString(command, forType: .string)
         
         // Open Terminal using shell script approach
-        let scriptPath = "/tmp/vexar_install.sh"
+        let scriptPath = getTempScriptPath("vexar_install.sh")
         let scriptContent = """
         #!/bin/bash
         echo "🔧 Ön Temizlik Yapılıyor..."
@@ -119,17 +167,23 @@ final class HomebrewManager: ObservableObject {
             process.arguments = ["-a", "Terminal", scriptPath]
             try process.run()
             
-            installProgress = "SpoofDPI kuruluyor... Lütfen Terminal'i takip edin."
+            installProgress = String(localized: "spoofdpi_installing_progress")
             
             // Poll for installation (max 2 minutes)
             for _ in 0..<60 {
                 try? await Task.sleep(nanoseconds: 2 * 1_000_000_000) // Check every 2s
                 checkInstallations()
                 if isSpoofDPIInstalled {
-                    installProgress = "Kurulum başarılı!"
+                    installProgress = String(localized: "install_complete")
                     try? await Task.sleep(nanoseconds: 1 * 1_000_000_000)
                     isInstalling = false
                     TelemetryManager.shared.sendEvent(eventName: "install_spoofdpi", parameters: ["status": "success", "method": "automated"])
+                    
+                    // Notify other managers (e.g. Main Window) to refresh
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(name: NSNotification.Name("RefreshInstallations"), object: nil)
+                    }
+                    
                     return true
                 }
             }
@@ -139,7 +193,7 @@ final class HomebrewManager: ObservableObject {
             return false
         } catch {
             print("[Vexar] Error: \(error)")
-            installError = "Komut panoya kopyalandı.\nTerminal'i açıp yapıştırın: ⌘V"
+            installError = String(localized: "manual_install_instruction")
             isInstalling = false
             TelemetryManager.shared.sendEvent(eventName: "install_spoofdpi", parameters: ["status": "failed", "error": error.localizedDescription])
             return false
@@ -150,7 +204,7 @@ final class HomebrewManager: ObservableObject {
     /// Install Discord - copies command and opens Terminal
     func installDiscord() async -> Bool {
         guard let brewPath = getHomebrewPath() else {
-            installError = "Homebrew bulunamadı"
+            installError = String(localized: "homebrew_not_found")
             return false
         }
         
@@ -166,7 +220,7 @@ final class HomebrewManager: ObservableObject {
         NSPasteboard.general.setString(command, forType: .string)
         
         // Open Terminal using shell script approach
-        let scriptPath = "/tmp/vexar_discord_install.sh"
+        let scriptPath = getTempScriptPath("vexar_discord_install.sh")
         let scriptContent = """
         #!/bin/bash
         echo "🎮 Discord Kuruluyor..."
@@ -197,6 +251,12 @@ final class HomebrewManager: ObservableObject {
                     try? await Task.sleep(nanoseconds: 1 * 1_000_000_000)
                     isInstalling = false
                     TelemetryManager.shared.sendEvent(eventName: "install_discord", parameters: ["status": "success"])
+                    
+                    // Notify other managers (e.g. Main Window) to refresh
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(name: NSNotification.Name("RefreshInstallations"), object: nil)
+                    }
+                    
                     return true
                 }
             }
@@ -223,7 +283,7 @@ final class HomebrewManager: ObservableObject {
         NSPasteboard.general.setString(command, forType: .string)
         
         // Create script file
-        let scriptPath = "/tmp/vexar_homebrew.sh"
+        let scriptPath = getTempScriptPath("vexar_homebrew.sh")
         let scriptContent = """
         #!/bin/bash
         echo "🍺 Homebrew Kuruluyor..."
@@ -303,7 +363,7 @@ final class HomebrewManager: ObservableObject {
     func uninstallDiscord() async -> Bool {
         guard let brewPath = getHomebrewPath() else { return false }
         
-        let scriptPath = "/tmp/vexar_discord_uninstall.sh"
+        let scriptPath = getTempScriptPath("vexar_discord_uninstall.sh")
         let scriptContent = """
         #!/bin/bash
         echo "🗑️ Discord Kaldırılıyor..."
@@ -329,7 +389,7 @@ final class HomebrewManager: ObservableObject {
     
     /// Uninstall Homebrew
     func uninstallHomebrew() {
-        let scriptPath = "/tmp/vexar_brew_uninstall.sh"
+        let scriptPath = getTempScriptPath("vexar_brew_uninstall.sh")
         let scriptContent = """
         #!/bin/bash
         echo "🍺 Homebrew Kaldırılıyor..."
@@ -359,7 +419,7 @@ final class HomebrewManager: ObservableObject {
         
         // 2. Prepare Self-Destruct Script
         let bundlePath = Bundle.main.bundlePath
-        let scriptPath = "/tmp/vexar_self_destruct.sh"
+        let scriptPath = getTempScriptPath("vexar_self_destruct.sh")
         
         let supportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Vexar").path ?? ""
         let cachesPath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier ?? "com.vexar").path ?? ""

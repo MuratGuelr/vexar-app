@@ -30,16 +30,32 @@ class UpdateManager: ObservableObject {
     @Published var latestVersion: String = ""
     @Published var releaseNotes: String = ""
     @Published var downloadURL: URL?
+    @Published var lastCheckError: String?
+    @Published var isChecking: Bool = false
     
     // GitHub Release Configuration
-    private let githubOwner = "MuratGuelr"
+    private let githubOwner = "vexar-app"
     private let githubRepo = "vexar-app"
     
     func checkForUpdates() async {
         guard let url = URL(string: "https://api.github.com/repos/\(githubOwner)/\(githubRepo)/releases/latest") else { return }
         
+        isChecking = true
+        lastCheckError = nil
+        
         do {
-            let (data, _) = try await URLSession.shared.data(from: url)
+            var request = URLRequest(url: url)
+            request.setValue("VexarApp/1.0", forHTTPHeaderField: "User-Agent")
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            // Check HTTP status code
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+                lastCheckError = "Server returned status \(httpResponse.statusCode)"
+                isChecking = false
+                return
+            }
+            
             let release = try JSONDecoder().decode(GitHubRelease.self, from: data)
             
             let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
@@ -58,18 +74,34 @@ class UpdateManager: ObservableObject {
                 self.isUpdateAvailable = true
                 TelemetryManager.shared.sendEvent(eventName: "update_available", parameters: ["version": release.tagName, "current": currentVersion])
             }
+        } catch let error as URLError {
+            switch error.code {
+            case .notConnectedToInternet:
+                lastCheckError = "İnternet bağlantısı yok"
+            case .timedOut:
+                lastCheckError = "Bağlantı zaman aşımına uğradı"
+            default:
+                lastCheckError = "Ağ hatası: \(error.localizedDescription)"
+            }
+            print("[Vexar] Update check failed: \(error)")
         } catch {
-            print("Update check failed: \(error)")
+            lastCheckError = "Güncelleme kontrolü başarısız"
+            print("[Vexar] Update check failed: \(error)")
         }
+        
+        isChecking = false
     }
     
     private func isNewerVersion(remote: String, current: String) -> Bool {
-        // Remove prefixes like "v"
-        let remoteClean = remote.replacingOccurrences(of: "v", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let currentClean = current.replacingOccurrences(of: "v", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+        // Cleaning function
+        func clean(_ v: String) -> [Int] {
+            return v.replacingOccurrences(of: "v", with: "")
+                .components(separatedBy: CharacterSet(charactersIn: ".-"))
+                .compactMap { Int($0) }
+        }
         
-        let remoteComponents = remoteClean.split(separator: ".").compactMap { Int($0) }
-        let currentComponents = currentClean.split(separator: ".").compactMap { Int($0) }
+        let remoteComponents = clean(remote)
+        let currentComponents = clean(current)
         
         let maxLength = max(remoteComponents.count, currentComponents.count)
         
@@ -84,6 +116,6 @@ class UpdateManager: ObservableObject {
             }
         }
         
-        return false // Exactly equal
+        return false
     }
 }

@@ -4,6 +4,7 @@ struct OnboardingView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var homebrewManager: HomebrewManager
     @Binding var isPresented: Bool
+    var onFinish: (() -> Void)? = nil
     
     @State private var showError = false
     @State private var isDiscordInstalled = false
@@ -63,7 +64,7 @@ struct OnboardingView: View {
     private var headerSection: some View {
         VStack(spacing: 10) {
             ZStack {
-                Image("VexarLogo")
+                Image(nsImage: NSApplication.shared.applicationIconImage)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 36, height: 36)
@@ -91,7 +92,7 @@ struct OnboardingView: View {
                     )
             }
             
-            Text("VEXAR ile internet deneyimine başlamak için\ngerekli bileşenleri kuralım.")
+            Text(String(localized: "welcome_desc"))
                 .font(.system(size: 10))
                 .foregroundColor(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
@@ -122,7 +123,7 @@ struct OnboardingView: View {
                 icon: "cube.box.fill",
                 iconColor: Color.vexarGreen,
                 title: "Homebrew",
-                subtitle: homebrewManager.isHomebrewInstalled ? "YÜKLÜ" : "Homebrew kurulu değil",
+                subtitle: homebrewManager.isHomebrewInstalled ? String(localized: "installed") : String(localized: "homebrew_not_found"),
                 isInstalled: homebrewManager.isHomebrewInstalled
             )
             
@@ -130,7 +131,7 @@ struct OnboardingView: View {
                 icon: "network.badge.shield.half.filled",
                 iconColor: Color.vexarBlue,
                 title: "SpoofDPI",
-                subtitle: homebrewManager.isSpoofDPIInstalled ? "YÜKLÜ" : "SpoofDPI kurulu değil",
+                subtitle: homebrewManager.isSpoofDPIInstalled ? String(localized: "installed") : String(localized: "spoofdpi_not_found"),
                 isInstalled: homebrewManager.isSpoofDPIInstalled
             )
             
@@ -138,7 +139,7 @@ struct OnboardingView: View {
                 icon: "gamecontroller.fill",
                 iconColor: .purple,
                 title: "Discord",
-                subtitle: isDiscordInstalled ? "YÜKLÜ" : "Discord kurulu değil",
+                subtitle: isDiscordInstalled ? String(localized: "installed") : String(localized: "not_found"),
                 isInstalled: isDiscordInstalled
             )
         }
@@ -161,7 +162,11 @@ struct OnboardingView: View {
     }
 
     private func checkDiscord() {
-        isDiscordInstalled = FileManager.default.fileExists(atPath: "/Applications/Discord.app")
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.hnc.Discord") {
+             isDiscordInstalled = FileManager.default.fileExists(atPath: url.path)
+        } else {
+             isDiscordInstalled = FileManager.default.fileExists(atPath: "/Applications/Discord.app")
+        }
     }
     
     private func statusRow(icon: String, iconColor: Color, title: String, subtitle: String, isInstalled: Bool) -> some View {
@@ -235,7 +240,7 @@ struct OnboardingView: View {
             Button(action: dismissOnboarding) {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
-                    Text("KURULUMU TAMAMLA")
+                    Text(String(localized: "complete_setup"))
                 }
                 .font(.system(size: 12, weight: .heavy))
                 .tracking(1)
@@ -267,7 +272,7 @@ struct OnboardingView: View {
                     } else {
                         Image(systemName: "terminal.fill")
                     }
-                    Text("HOMEBREW KUR")
+                    Text(String(localized: "install_homebrew"))
                 }
                 .font(.system(size: 12, weight: .heavy))
                 .tracking(1)
@@ -297,7 +302,7 @@ struct OnboardingView: View {
                     } else {
                         Image(systemName: "arrow.down.circle.fill")
                     }
-                    Text("SPOOFDPI İNDİR")
+                    Text(String(localized: "install_spoofdpi"))
                 }
                 .font(.system(size: 12, weight: .heavy))
                 .tracking(1)
@@ -327,7 +332,7 @@ struct OnboardingView: View {
                     } else {
                         Image(systemName: "gamecontroller.fill")
                     }
-                    Text("DISCORD KUR")
+                    Text(String(localized: "install_discord"))
                 }
                 .font(.system(size: 12, weight: .heavy))
                 .tracking(1)
@@ -362,7 +367,7 @@ struct OnboardingView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.clockwise")
                         .font(.system(size: 10, weight: .bold))
-                    Text("Yenile")
+                    Text(String(localized: "refresh_status"))
                         .font(.system(size: 10, weight: .bold))
                 }
                 .foregroundColor(.white.opacity(0.6))
@@ -375,7 +380,7 @@ struct OnboardingView: View {
             
             if !homebrewManager.isSpoofDPIInstalled {
                 Button(action: dismissOnboarding) {
-                    Text("Şimdilik Atla")
+                    Text(String(localized: "skip"))
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.white.opacity(0.4))
                 }
@@ -407,6 +412,7 @@ struct OnboardingView: View {
         withAnimation {
             UserDefaults.standard.set(true, forKey: "onboardingDismissed")
             isPresented = false
+            onFinish?()
         }
     }
 }

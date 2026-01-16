@@ -7,20 +7,18 @@ import FirebaseCore
 struct VexarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState.shared
-    @StateObject private var homebrewManager = HomebrewManager()
-    @State private var showOnboarding = false
+    @StateObject private var homebrewManager = HomebrewManager.shared
     
     init() {
-        // Set default values (Opt-out model)
+        // Register defaults
         UserDefaults.standard.register(defaults: ["isAnalyticsEnabled": true])
-        
         FirebaseApp.configure()
         requestNotificationPermission()
     }
 
     var body: some Scene {
         MenuBarExtra {
-            ContentView(showOnboarding: $showOnboarding)
+            ContentView()
                 .environmentObject(appState)
                 .environmentObject(homebrewManager)
                 .onAppear {
@@ -58,7 +56,192 @@ struct VexarApp: App {
 // MARK: - App Delegate
 class AppDelegate: NSObject, NSApplicationDelegate {
     var quittingWindow: NSWindow?
+    var splashWindow: NSWindow?
+    var uninstallWindow: NSWindow?
+    var wizardWindow: NSWindow?
     var isCleaningUp = false
+    
+    // ... (existing code)
+    
+    @MainActor
+    func showUninstallWindow() {
+        // If already open, bring to front
+        if let window = uninstallWindow {
+            window.makeKeyAndOrderFront(nil)
+            return
+        }
+        
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 340, height: 320),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.center()
+        window.level = .modalPanel // Show above standard windows but typically below screensaver/lock (floating might be too high if we want modal feel)
+        window.backgroundColor = .clear
+        window.isOpaque = false
+        window.hasShadow = true
+        window.isMovableByWindowBackground = true // Let user move it if needed? Or false like others.
+        window.isReleasedWhenClosed = false
+        
+        // Ensure it appears on active space
+        // window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary] // Sometimes this behaves weirdly if not fullscreen.
+        // Let's rely on standard behavior first, or keep it if we want it over others.
+        // Actually, for a modal-like tool, standard behavior is fine, but we want to make sure it's visible.
+        
+        let mainView = UninstallingView() { [weak self] in
+            // Close callback
+            self?.closeUninstallWindow()
+        }
+        
+        let manager = HomebrewManager.shared
+        
+        let hostingView = NSHostingView(rootView: 
+            mainView.environmentObject(manager)
+        )
+        window.contentView = hostingView
+        
+        // CRITICAL: Bring app to front and show window
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        self.uninstallWindow = window
+    }
+    
+    func closeUninstallWindow() {
+        guard let window = uninstallWindow else { return }
+        
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.3
+            window.animator().alphaValue = 0
+        }, completionHandler: {
+            window.close()
+            self.uninstallWindow = nil
+        })
+    }
+
+    @MainActor
+    func showWizardWindow() {
+        if let window = wizardWindow {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 350, height: 500),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.center()
+        window.level = .modalPanel
+        window.backgroundColor = .clear
+        window.isOpaque = false
+        window.hasShadow = true
+        window.isMovableByWindowBackground = true
+        window.isReleasedWhenClosed = false
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        
+        let manager = HomebrewManager.shared
+        
+        // Pass shared AppState to ensure consistent state
+        let mainView = WizardWindow(onClose: { [weak self] in
+            self?.closeWizardWindow()
+        })
+        .environmentObject(AppState.shared)
+        .environmentObject(manager)
+        
+        let hostingView = NSHostingView(rootView: mainView)
+        window.contentView = hostingView
+        
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        self.wizardWindow = window
+    }
+    
+    func closeWizardWindow() {
+        guard let window = wizardWindow else { return }
+        
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.3
+            window.animator().alphaValue = 0
+        }, completionHandler: {
+            window.close()
+            self.wizardWindow = nil
+        })
+    }
+    
+    // ...
+    
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // Observer for custom window commands
+        NotificationCenter.default.addObserver(forName: NSNotification.Name("OpenUninstallWindow"), object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in
+                self?.showUninstallWindow()
+            }
+        }
+        
+        NotificationCenter.default.addObserver(forName: NSNotification.Name("OpenWizardWindow"), object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in
+                self?.showWizardWindow()
+            }
+        }
+        
+        showSplashScreen()
+        
+        // Auto-launch Wizard if not onboarded
+        let onboardingDismissed = UserDefaults.standard.bool(forKey: "onboardingDismissed")
+        if !onboardingDismissed {
+            // Wait for splash (1.5s) + small buffer
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) { [weak self] in
+                Task { @MainActor in
+                    self?.showWizardWindow()
+                }
+            }
+        }
+    }
+    
+    private func showSplashScreen() {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 320, height: 260),
+            styleMask: [.borderless], // Borderless for custom shape
+            backing: .buffered,
+            defer: false
+        )
+        window.center()
+        window.level = .floating // Show above other windows
+        window.backgroundColor = .clear
+        window.isOpaque = false
+        window.hasShadow = true
+        window.isReleasedWhenClosed = false // Manage lifecycle manually
+        
+        // Ensure it appears on active space
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        
+        let hostingView = NSHostingView(rootView: SplashScreenView())
+        window.contentView = hostingView
+        
+        window.makeKeyAndOrderFront(nil)
+        self.splashWindow = window
+        
+        // Auto-close after 1.5 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            self?.closeSplashScreen()
+        }
+    }
+    
+    private func closeSplashScreen() {
+        guard let window = splashWindow else { return }
+        
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.5
+            window.animator().alphaValue = 0
+        }, completionHandler: {
+            window.close()
+            self.splashWindow = nil
+        })
+    }
     
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if isCleaningUp {
@@ -96,7 +279,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isOpaque = false
         window.hasShadow = true
         
-        let hostingView = NSHostingView(rootView: QuittingView())
+        let hostingView = NSHostingView(rootView: QuittingView().environmentObject(MainActor.assumeIsolated { AppState.shared }))
         window.contentView = hostingView
         
         window.makeKeyAndOrderFront(nil)
@@ -106,22 +289,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     private func cleanup() async {
         // Step 1
-        withAnimation { AppState.shared.quittingStatus = "Bağlantılar kontrol ediliyor..." }
-        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s
+        withAnimation { AppState.shared.quittingStatus = String(localized: "status_cleaning") }
+        try? await Task.sleep(nanoseconds: 200_000_000) // 0.2s
         
         // Step 2
-        withAnimation { AppState.shared.quittingStatus = "SpoofDPI servisi durduruluyor..." }
+        withAnimation { AppState.shared.quittingStatus = String(localized: "status_stopping_service") }
         AppState.shared.processManager.stopBlocking()
-        try? await Task.sleep(nanoseconds: 800_000_000) // 0.8s
+        try? await Task.sleep(nanoseconds: 400_000_000) // 0.4s
         
         // Step 3
-        withAnimation { AppState.shared.quittingStatus = "Geçici dosyalar temizleniyor..." }
-        try? await Task.sleep(nanoseconds: 800_000_000) // 0.8s
+        withAnimation { AppState.shared.quittingStatus = String(localized: "status_cleanup_temp") }
+        try? await Task.sleep(nanoseconds: 400_000_000) // 0.4s
         
         // Step 4
         TelemetryManager.shared.sendEvent(eventName: "app_quit")
-        withAnimation { AppState.shared.quittingStatus = "Hoşçakalın! 👋" }
-        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s
+        withAnimation { AppState.shared.quittingStatus = String(localized: "status_goodbye") }
+        try? await Task.sleep(nanoseconds: 300_000_000) // 0.3s
     }
 }
 
@@ -129,27 +312,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var homebrewManager: HomebrewManager
-    @Binding var showOnboarding: Bool
     
-    // Reactive storage
-    @AppStorage("onboardingDismissed") var onboardingDismissed: Bool = false
+    // We no longer rely on ContentView to show onboarding. 
+    // AppDelegate handles it via WizardWindow.
     
     var body: some View {
-        Group {
-            if !onboardingDismissed {
-                OnboardingView(isPresented: $showOnboarding)
-                    .environmentObject(appState)
-                    .environmentObject(homebrewManager)
-            } else {
-                MenuBarView()
-                    .environmentObject(appState)
-                    .environmentObject(homebrewManager)
+        MenuBarView()
+            .environmentObject(appState)
+            .environmentObject(homebrewManager)
+            .sheet(isPresented: $appState.updateManager.isUpdateAvailable) {
+                UpdateView()
+                    .environmentObject(appState.updateManager)
             }
-        }
-        .sheet(isPresented: $appState.updateManager.isUpdateAvailable) {
-            UpdateView()
-                .environmentObject(appState.updateManager)
-        }
     }
 }
 

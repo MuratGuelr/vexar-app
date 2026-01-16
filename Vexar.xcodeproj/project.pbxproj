@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E01CCDA2F19F9E5004317C4 /* SplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E01CCD92F19F9E5004317C4 /* SplashScreenView.swift */; };
+		5E01CCDC2F1A0086004317C4 /* UninstallingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E01CCDB2F1A0086004317C4 /* UninstallingView.swift */; };
+		5E01CCDE2F1A0303004317C4 /* WizardWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E01CCDD2F1A0303004317C4 /* WizardWindow.swift */; };
+		5E01CCE02F1A118B004317C4 /* NetworkStatsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E01CCDF2F1A118B004317C4 /* NetworkStatsManager.swift */; };
+		5E01CCE22F1A1EA4004317C4 /* DNSManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E01CCE12F1A1EA4004317C4 /* DNSManager.swift */; };
+		5E01CCE52F1A1EBF004317C4 /* DNSServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E01CCE42F1A1EBF004317C4 /* DNSServer.swift */; };
 		5E15CCD12EEFA7EB003D8F29 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5E15CCD02EEFA7EB003D8F29 /* GoogleService-Info.plist */; };
 		5E15CCD52EEFAFDA003D8F29 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 5E15CCD42EEFAFDA003D8F29 /* FirebaseFirestore */; };
 		5E15CCD72EEFB079003D8F29 /* TelemetryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E15CCD62EEFB079003D8F29 /* TelemetryManager.swift */; };
@@ -27,6 +33,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5E01CCD92F19F9E5004317C4 /* SplashScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreenView.swift; sourceTree = "<group>"; };
+		5E01CCDB2F1A0086004317C4 /* UninstallingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UninstallingView.swift; sourceTree = "<group>"; };
+		5E01CCDD2F1A0303004317C4 /* WizardWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WizardWindow.swift; sourceTree = "<group>"; };
+		5E01CCDF2F1A118B004317C4 /* NetworkStatsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkStatsManager.swift; sourceTree = "<group>"; };
+		5E01CCE12F1A1EA4004317C4 /* DNSManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNSManager.swift; sourceTree = "<group>"; };
+		5E01CCE42F1A1EBF004317C4 /* DNSServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNSServer.swift; sourceTree = "<group>"; };
 		5E15CCD02EEFA7EB003D8F29 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		5E15CCD62EEFB079003D8F29 /* TelemetryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryManager.swift; sourceTree = "<group>"; };
 		5E8130242F16B8B800CF018E /* QuittingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuittingView.swift; sourceTree = "<group>"; };
@@ -61,6 +73,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5E01CCE32F1A1EAE004317C4 /* DNS */ = {
+			isa = PBXGroup;
+			children = (
+				5E01CCE42F1A1EBF004317C4 /* DNSServer.swift */,
+			);
+			path = DNS;
+			sourceTree = "<group>";
+		};
 		5E15CCD32EEFAFDA003D8F29 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -104,6 +124,9 @@
 		B80000052B4D0000000AAAAF /* Managers */ = {
 			isa = PBXGroup;
 			children = (
+				5E01CCE12F1A1EA4004317C4 /* DNSManager.swift */,
+				5E01CCE32F1A1EAE004317C4 /* DNS */,
+				5E01CCDF2F1A118B004317C4 /* NetworkStatsManager.swift */,
 				5E15CCD62EEFB079003D8F29 /* TelemetryManager.swift */,
 				5EB7D15A2EEF5616003D1E67 /* UpdateManager.swift */,
 				B81000022B4D0001000AAAAC /* ProcessManager.swift */,
@@ -116,6 +139,9 @@
 		B80000062B4D0000000AAAB0 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				5E01CCDD2F1A0303004317C4 /* WizardWindow.swift */,
+				5E01CCDB2F1A0086004317C4 /* UninstallingView.swift */,
+				5E01CCD92F19F9E5004317C4 /* SplashScreenView.swift */,
 				5E8130242F16B8B800CF018E /* QuittingView.swift */,
 				B81000042B4D0001000AAAAE /* MenuBarView.swift */,
 				B81000052B4D0001000AAAAF /* SettingsView.swift */,
@@ -209,19 +235,25 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5E01CCE02F1A118B004317C4 /* NetworkStatsManager.swift in Sources */,
 				B81000012B4D0001000AAAAA /* VexarApp.swift in Sources */,
 				B81000022B4D0001000AAAAB /* AppState.swift in Sources */,
 				B81000032B4D0001000AAAAC /* ProcessManager.swift in Sources */,
 				5E15CCD72EEFB079003D8F29 /* TelemetryManager.swift in Sources */,
 				B81000042B4D0001000AAAAD /* DiscordManager.swift in Sources */,
 				5E8130252F16B8B800CF018E /* QuittingView.swift in Sources */,
+				5E01CCDE2F1A0303004317C4 /* WizardWindow.swift in Sources */,
+				5E01CCE52F1A1EBF004317C4 /* DNSServer.swift in Sources */,
 				B81000052B4D0001000AAAAE /* MenuBarView.swift in Sources */,
+				5E01CCDA2F19F9E5004317C4 /* SplashScreenView.swift in Sources */,
 				B81000062B4D0001000AAAAF /* SettingsView.swift in Sources */,
+				5E01CCE22F1A1EA4004317C4 /* DNSManager.swift in Sources */,
 				B81000072B4D0001000AAAB0 /* LogsView.swift in Sources */,
 				B81000092B4D0001000AAAB4 /* HomebrewManager.swift in Sources */,
 				5EB7D15B2EEF5616003D1E67 /* UpdateManager.swift in Sources */,
 				B8100010B4D0001000AAAB5 /* OnboardingView.swift in Sources */,
 				B2101DF0F412F29F186919BB /* UpdateView.swift in Sources */,
+				5E01CCDC2F1A0086004317C4 /* UninstallingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

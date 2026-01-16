@@ -3,28 +3,41 @@
 /* App */
 "app_name" = "VEXAR";
 "version" = "v1.0";
+"system_ready" = "System is Ready";
+"quitting_title" = "Shutting Down...";
+"status_cleaning" = "Checking connections...";
+"status_stopping_service" = "Stopping SpoofDPI service...";
+"status_cleanup_temp" = "Cleaning temporary files...";
+"status_goodbye" = "Goodbye! 👋";
 
 /* Connection Status */
-"status_connected" = "Connected";
-"status_disconnected" = "Disconnected";
+"status_connected" = "Secure";
+"status_disconnected" = "Passive";
 "status_connecting" = "Connecting...";
 "port_label" = "Port: %@";
 
+/* Status Messages */
+"status_secure_message" = "You can use Discord seamlessly.";
+"status_ready_message" = "Connect for DPI Bypass.";
+
 /* Buttons */
-"connect" = "Connect";
-"disconnect" = "Disconnect";
+"connect" = "CONNECT";
+"disconnect" = "DISCONNECT";
 "launch_discord" = "Launch Discord";
-"settings" = "Settings";
-"logs" = "Logs";
-"quit" = "Quit";
+"settings" = "SETTINGS";
+"logs" = "LOGS";
+"quit" = "QUIT";
+
+/* Menu Bar */
+"spoofdpi_not_found_warning" = "⚠️ SpoofDPI Not Found";
 
 /* Settings */
-"settings_title" = "Settings";
+"settings_title" = "SETTINGS";
 "proxy_port" = "Proxy Port";
 "apply" = "Apply";
 "disconnect_to_change" = "Disconnect to change port";
 "launch_at_login" = "Launch at Login";
-"launch_at_login_desc" = "Start Vexar automatically when you log in";
+"launch_at_login_desc" = "Vexar starts automatically when computer boots.";
 "version_label" = "Version";
 "spoofdpi_status" = "SpoofDPI";
 "installed" = "Installed ✓";
@@ -33,37 +46,105 @@
 "invalid_port_message" = "Please enter a valid port number (1024-65535)";
 "ok" = "OK";
 
+/* Settings - Sections */
+"section_general" = "GENERAL";
+"section_privacy" = "PRIVACY";
+"section_developer" = "DEVELOPER";
+"section_danger_zone" = "DANGER ZONE";
+
+/* Settings - Analytics */
+"analytics_title" = "Anonymous Data Collection";
+"analytics_desc" = "Share anonymous usage data to help improve Vexar.";
+"on" = "ON";
+"off" = "OFF";
+
+/* Settings - Setup Wizard */
+"setup_wizard" = "Setup Wizard";
+"setup_wizard_desc" = "Reinstall required components.";
+
+/* Settings - Developer */
+"developer_name" = "ConsolAktif";
+"developer_title" = "Vexar Developer";
+"subscribe_youtube" = "Subscribe on YouTube";
+
+/* Settings - Uninstall */
+"uninstall_app" = "Completely Remove App";
+"uninstall_desc" = "Deletes Vexar and its components.";
+"uninstall_tool_title" = "Vexar Removal Tool";
+"uninstall_confirmation" = "This will delete the app and all its data.\nSpoofDPI will be removed automatically, you will be asked about other components.\n\nDo you want to continue?";
+"uninstall_stopping_services" = "Stopping SpoofDPI services...";
+"uninstall_removing_spoofdpi" = "Removing SpoofDPI...";
+"uninstall_ask_discord" = "Would you also like to remove Discord?\n(Recommended only if installed via Vexar)";
+"uninstall_removing_discord" = "Removing Discord...";
+"uninstall_ask_homebrew" = "Would you also like to remove Homebrew package manager?\n(KEEP if you use other developer tools)";
+"uninstall_running_homebrew" = "Running Homebrew removal script...";
+"uninstall_final" = "Cleaning up Vexar...\nGoodbye! 👋";
+"yes" = "Yes";
+"no" = "No";
+
 /* Logs */
-"logs_title" = "Process Logs";
+"logs_title" = "SYSTEM LOGS";
 "auto_scroll" = "Auto-scroll";
 "lines_count" = "%d lines";
-"copy" = "Copy";
-"clear" = "Clear";
+"copy" = "COPY";
+"clear" = "CLEAR";
 "no_logs" = "No logs yet";
 "no_logs_desc" = "Connect to SpoofDPI to see process output";
 
 /* Onboarding */
 "welcome_title" = "Welcome to Vexar";
-"welcome_desc" = "Vexar needs SpoofDPI to route Discord traffic.";
+"welcome_desc" = "Let's install the required components to start your internet experience with VEXAR.";
 "spoofdpi_not_found" = "SpoofDPI Not Found";
-"install_spoofdpi" = "Install SpoofDPI";
-"skip" = "Skip";
+"install_spoofdpi" = "DOWNLOAD SPOOFDPI";
+"skip" = "Skip for Now";
 "cancel" = "Cancel";
 "installing_spoofdpi" = "Installing SpoofDPI...";
 "installing_homebrew" = "Installing Homebrew...";
 "install_complete" = "Installation complete!";
+"install_homebrew" = "INSTALL HOMEBREW";
+"install_discord" = "INSTALL DISCORD";
+"complete_setup" = "COMPLETE SETUP";
 "homebrew_not_found" = "Homebrew is required. Please install it first.";
 "install_homebrew_terminal" = "Install Homebrew in Terminal";
-"refresh_status" = "Refresh Status";
+"refresh_status" = "Refresh";
 "discord_launch_info" = "You can now launch Discord from anywhere.";
 "homebrew_installed" = "Homebrew installed successfully!";
 "homebrew_install_failed" = "Failed to install Homebrew";
 "install_failed" = "Installation failed";
 "try_again" = "Try Again";
 "continue" = "Continue";
+"spoofdpi_installing_progress" = "Installing SpoofDPI... Please follow Terminal.";
+"discord_installing_progress" = "Installing Discord... Please follow Terminal.";
+"homebrew_installing_progress" = "Installing Homebrew... This may take a while.";
+
+/* Quitting */
+"quitting_title" = "Closing Vexar";
+"quitting_default" = "Closing...";
+"quitting_checking" = "Checking connections...";
+"quitting_stopping" = "Stopping SpoofDPI service...";
+"quitting_cleaning" = "Cleaning temporary files...";
+"quitting_goodbye" = "Goodbye! 👋";
+
+/* Update */
+"update_available_title" = "New Version Available! 🎉";
+"update_version_text" = "Vexar %@ is now available.";
+"update_notes_title" = "What's New:";
+"update_later" = "Later";
+"update_download" = "Download & Update";
 
 /* Log Messages */
 "log_connected" = "✅ Connected on port %d";
 "log_disconnected" = "🔌 Disconnected";
 "log_discord_launched" = "🎮 Launched Discord with proxy port %d";
 "log_connection_failed" = "❌ Connection failed: %@";
+
+/* Notification */
+"notification_title" = "Vexar is Running";
+"notification_body" = "App is active in menu bar. Click the icon to control.";
+
+/* Status Labels */
+"status_ready" = "READY";
+"status_secure" = "SECURE";
+
+/* Manual Install */
+"manual_install_instruction" = "Command copied to clipboard.\nOpen Terminal and paste: ⌘V";

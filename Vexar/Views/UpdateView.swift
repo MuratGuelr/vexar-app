@@ -18,11 +18,11 @@ struct UpdateView: View {
                     .shadow(color: .vexarBlue.opacity(0.5), radius: 10)
                 
                 VStack(spacing: 8) {
-                    Text("Yeni Sürüm Mevcut! 🎉")
+                    Text(String(localized: "update_available_title"))
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.white)
                     
-                    Text("Vexar \(updateManager.latestVersion) yayınlandı.")
+                    Text(String(localized: "update_version_text", defaultValue: "Vexar \(updateManager.latestVersion) is now available."))
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
                 }
@@ -30,7 +30,7 @@ struct UpdateView: View {
                 // Release Notes
                 ScrollView {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Yenilikler:")
+                        Text(String(localized: "update_notes_title"))
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.white)
                         
@@ -49,7 +49,7 @@ struct UpdateView: View {
                 // Buttons
                 HStack(spacing: 12) {
                     Button(action: { dismiss() }) {
-                        Text("Daha Sonra")
+                        Text(String(localized: "update_later"))
                             .font(.system(size: 13))
                             .foregroundColor(.secondary)
                             .padding(.vertical, 10)
@@ -64,7 +64,7 @@ struct UpdateView: View {
                             NSWorkspace.shared.open(url)
                         }
                     }) {
-                        Text("İndir ve Güncelle")
+                        Text(String(localized: "update_download"))
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.white)
                             .padding(.vertical, 10)

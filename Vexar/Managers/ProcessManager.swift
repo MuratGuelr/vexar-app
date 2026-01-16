@@ -10,7 +10,23 @@ final class ProcessManager: ObservableObject {
     // Add current port property to be read by others if needed, though UI won't show it explicitly
     @Published private(set) var currentPort: Int = 8080
     
-    nonisolated(unsafe) private var process: Process?
+    // Thread-safe process management
+    private let processLock = NSLock()
+    nonisolated(unsafe) private var _process: Process?
+    
+    private var process: Process? {
+        get {
+            processLock.lock()
+            defer { processLock.unlock() }
+            return _process
+        }
+        set {
+            processLock.lock()
+            defer { processLock.unlock() }
+            _process = newValue
+        }
+    }
+    
     private var outputPipe: Pipe?
     private var errorPipe: Pipe?
     
@@ -19,6 +35,7 @@ final class ProcessManager: ObservableObject {
     private let maxCrashCount = 3
     private var lastCrashTime: Date?
     private var isUserInitiatedStop = false
+    private var _dnsAddress: String? = nil
     
     enum ProcessError: LocalizedError {
         case binaryNotFound
@@ -41,9 +58,12 @@ final class ProcessManager: ObservableObject {
     }
     
     /// Start the spoof-dpi process
-    nonisolated func start() async throws {
+    nonisolated func start(dnsAddress: String?) async throws {
         // Reset manual stop flag
-        await MainActor.run { self.isUserInitiatedStop = false }
+        await MainActor.run { 
+            self.isUserInitiatedStop = false 
+            self._dnsAddress = dnsAddress
+        }
         
         // Kill any existing instances to prevent conflicts
         killExistingProcesses()
@@ -64,6 +84,7 @@ final class ProcessManager: ObservableObject {
         
         // SpoofDPI v1.2.1 arguments:
         // --listen-addr string: IP address and port to listen on (default: 127.0.0.1:8080)
+        // --dns-addr string: DNS server address (default: 8.8.8.8) - Using Cloudflare 1.1.1.1 for speed
         // --log-level string: Set log level (default: "info")
         // --system-proxy bool: Automatically set system-wide proxy configuration
         process.arguments = [
@@ -71,6 +92,10 @@ final class ProcessManager: ObservableObject {
             "--log-level", "info",
             "--system-proxy"
         ]
+        
+        if let dns = dnsAddress, !dns.isEmpty {
+            process.arguments?.append(contentsOf: ["--dns-addr", dns])
+        }
         
         // Setup pipes for output capture
         let outputPipe = Pipe()
@@ -115,10 +140,13 @@ final class ProcessManager: ObservableObject {
     }
     
     /// Kill any existing spoofdpi processes to ensure a clean state
+    /// Safely target only the current user's processes using pkill -u
     nonisolated private func killExistingProcesses() {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/killall")
-        process.arguments = ["spoofdpi"]
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
+        // -x: exact name match
+        // -u: targets only processes owned by current effective user ID
+        process.arguments = ["-x", "-u", "\(geteuid())", "spoofdpi"]
         process.standardOutput = Pipe() // Suppress output
         process.standardError = Pipe() // Suppress errors (like "no process found")
         try? process.run()
@@ -130,14 +158,14 @@ final class ProcessManager: ObservableObject {
         isUserInitiatedStop = true
         guard let process = process, process.isRunning else {
             isRunning = false
+            closePipes()
             return
         }
         
         process.terminate()
+        closePipes()
         
         self.process = nil
-        self.outputPipe = nil
-        self.errorPipe = nil
         isRunning = false
     }
     
@@ -161,13 +189,24 @@ final class ProcessManager: ObservableObject {
         
         _ = dispatchGroup.wait(timeout: .now() + 2.0)
         
+        closePipes()
         self.process = nil
         self.isRunning = false
     }
     
+    private func closePipes() {
+        try? outputPipe?.fileHandleForReading.close()
+        outputPipe = nil
+        try? errorPipe?.fileHandleForReading.close()
+        errorPipe = nil
+    }
+
     /// Clear all logs
     func clearLogs() {
-        logs.removeAll()
+        // Trigger explicit UI update
+        objectWillChange.send()
+        // Replace with new empty array to force SwiftUI diffing
+        logs = []
     }
     
     // MARK: - Private Helpers
@@ -192,7 +231,7 @@ final class ProcessManager: ObservableObject {
                 Task {
                     // Wait a bit before restart
                     try? await Task.sleep(nanoseconds: 1 * 1_000_000_000)
-                    try? await start()
+                    try? await start(dnsAddress: self._dnsAddress)
                 }
             } else {
                 appendLog("❌ Maximum restart attempts reached. Please check logs.")
@@ -257,6 +296,46 @@ final class ProcessManager: ObservableObject {
         return bindResult == 0
     }
     
+    // MARK: - Logging System
+    
+    // Nested helper class to manage log buffering in a thread-safe way
+    private class LogBuffer: @unchecked Sendable {
+        private var buffer: [String] = []
+        private var isFlushPending = false
+        private let lock = NSLock()
+        
+        func append(_ lines: [String]) {
+            lock.lock()
+            defer { lock.unlock() }
+            buffer.append(contentsOf: lines)
+        }
+        
+        func takeAll() -> [String] {
+            lock.lock()
+            defer { lock.unlock() }
+            let items = buffer
+            buffer.removeAll()
+            return items
+        }
+        
+        func setflushPending(_ value: Bool) {
+            lock.lock()
+            defer { lock.unlock() }
+            isFlushPending = value
+        }
+        
+        func checkAndSetPending() -> Bool {
+            lock.lock()
+            defer { lock.unlock() }
+            if isFlushPending { return false }
+            isFlushPending = true
+            return true
+        }
+    }
+    
+    // Thread-safe log buffer instance
+    private let logBuffer = LogBuffer()
+    
     private func setupOutputReading(from fileHandle: FileHandle, prefix: String) {
         fileHandle.readabilityHandler = { [weak self] handle in
             let data = handle.availableData
@@ -267,25 +346,103 @@ final class ProcessManager: ObservableObject {
             
             let lines = output.components(separatedBy: .newlines)
                 .filter { !$0.isEmpty }
+                .map { "\(prefix)\($0)" }
             
-            Task { @MainActor in
-                for line in lines {
-                    self?.appendLog("\(prefix)\(line)")
-                }
+            self?.queueLogs(lines)
+        }
+    }
+    
+    nonisolated private func queueLogs(_ lines: [String]) {
+        // Appending is safe via lock
+        logBuffer.append(lines)
+        
+        // Schedule flush if not already pending
+        if logBuffer.checkAndSetPending() {
+            // Throttle updates
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                self?.flushLogs()
             }
         }
     }
     
-    private func appendLog(_ message: String) {
+    nonisolated private func flushLogs() {
+        let logsToAppend = logBuffer.takeAll()
+        logBuffer.setflushPending(false)
+        
+        if logsToAppend.isEmpty { return }
+        
+        Task { @MainActor in
+            self.batchAppendLogs(logsToAppend)
+        }
+    }
+    
+    private func batchAppendLogs(_ messages: [String]) {
         let timestamp = DateFormatter.logFormatter.string(from: Date())
-        logs.append("[\(timestamp)] \(message)")
+        for message in messages {
+            logs.append("[\(timestamp)] \(message)")
+        }
         
         if logs.count > 300 {
             logs.removeFirst(logs.count - 200)
         }
     }
     
+    /// Direct append for internal/external messages
+    nonisolated func addLog(_ message: String) {
+        queueLogs([message])
+    }
+    
+    // Internal helper for existing calls (redirects to addLog)
+    nonisolated private func appendLog(_ message: String) {
+        addLog(message)
+    }
+    
     deinit {
-        process?.terminate()
+        // Access backing storage directly to avoid MainActor check
+        _process?.terminate()
+        resetSystemProxies()
+    }
+
+    /// Attempts to reset system proxy settings for all available network services
+    /// This is a safeguard against SpoofDPI crashing and leaving proxies enabled
+    nonisolated private func resetSystemProxies() {
+        // 1. Get list of all network services
+        let listProcess = Process()
+        listProcess.executableURL = URL(fileURLWithPath: "/usr/sbin/networksetup")
+        listProcess.arguments = ["-listallnetworkservices"]
+        
+        let pipe = Pipe()
+        listProcess.standardOutput = pipe
+        
+        do {
+            try listProcess.run()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            
+            if let output = String(data: data, encoding: .utf8) {
+                let services = output.components(separatedBy: .newlines)
+                    .filter { line in
+                        !line.isEmpty && 
+                        !line.contains("An asterisk") && // Skip instructional header
+                        !line.contains("(*)") // Skip explicitly disabled services if you want, or include them to be safe. Usually we only care about active ones, but resetting disabled ones doesn't hurt.
+                    }
+                
+                // 2. Reset each service
+                for service in services {
+                    // Turn off web proxy
+                    let webProxy = Process()
+                    webProxy.executableURL = URL(fileURLWithPath: "/usr/sbin/networksetup")
+                    webProxy.arguments = ["-setwebproxystate", service, "off"]
+                    try? webProxy.run()
+                    
+                    // Turn off secure web proxy
+                    let secureWebProxy = Process()
+                    secureWebProxy.executableURL = URL(fileURLWithPath: "/usr/sbin/networksetup")
+                    secureWebProxy.arguments = ["-setsecurewebproxystate", service, "off"]
+                    try? secureWebProxy.run()
+                }
+            }
+        } catch {
+            print("[Vexar] Failed to reset system proxies: \(error)")
+        }
     }
 }

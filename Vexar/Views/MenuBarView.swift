@@ -26,13 +26,13 @@ struct MenuBarView: View {
                 VStack(spacing: 0) {
                     // Header
                     HStack {
-                        Image("VexarLogo")
+                        Image(nsImage: NSApplication.shared.applicationIconImage)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 24, height: 24)
                             .shadow(color: statusColor.opacity(0.5), radius: 8)
                         
-                        Text("VEXAR")
+                        Text(String(localized: "app_name"))
                             .font(.system(size: 14, weight: .heavy, design: .default))
                             .tracking(2)
                             .foregroundStyle(.white.opacity(0.8))
@@ -69,7 +69,8 @@ struct MenuBarView: View {
                         isConnected: appState.isConnected,
                         isConnecting: appState.isConnecting,
                         color: statusColor,
-                        isVisible: isVisible
+                        isVisible: isVisible,
+                        latency: appState.currentLatency
                     )
                     .frame(height: 220)
                     .contentShape(Rectangle()) // Hit testing area
@@ -81,12 +82,20 @@ struct MenuBarView: View {
                     Spacer()
                     
                     // Warning Banner (if needed)
-                    if !homebrewManager.isSpoofDPIInstalled {
-                        Text("⚠️ SpoofDPI Bulunamadı")
+    if !homebrewManager.isSpoofDPIInstalled {
+                        Text(String(localized: "spoofdpi_not_found_warning"))
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.vexarOrange)
                             .padding(.bottom, 8)
                             .transition(.opacity)
+                            .zIndex(1)
+                    } else if !appState.isInternetAvailable {
+                        Text(String(localized: "no_internet_warning"))
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.red)
+                            .padding(.bottom, 8)
+                            .transition(.opacity)
+                            .zIndex(1)
                     }
                     
                     // Connect Button
@@ -94,7 +103,7 @@ struct MenuBarView: View {
                         HStack {
                             Image(systemName: "power")
                             .font(.system(size: 20, weight: .bold))
-                            Text(appState.isConnected ? "BAĞLANTIYI KES" : "BAĞLAN")
+                            Text(appState.isConnected ? String(localized: "disconnect") : String(localized: "connect"))
                                 .font(.system(size: 14, weight: .bold, design: .monospaced))
                         }
                         .foregroundColor(appState.isConnected ? .white : .black)
@@ -126,13 +135,13 @@ struct MenuBarView: View {
                     
                     // Bottom Navigation Bar
                     HStack(spacing: 0) {
-                        NavButton(icon: "gearshape.fill", label: "AYARLAR", destination: "settings")
+                        NavButton(icon: "gearshape.fill", label: String(localized: "settings"), destination: "settings")
                         
                         Divider()
                             .frame(height: 20)
                             .background(Color.white.opacity(0.1))
                         
-                        NavButton(icon: "doc.text.fill", label: "LOGLAR", destination: "logs")
+                        NavButton(icon: "doc.text.fill", label: String(localized: "logs"), destination: "logs")
                         
                         Divider()
                             .frame(height: 20)
@@ -149,7 +158,7 @@ struct MenuBarView: View {
                             VStack(spacing: 4) {
                                 Image(systemName: "power")
                                     .font(.system(size: 16))
-                                Text("ÇIKIŞ")
+                                Text(String(localized: "quit"))
                                     .font(.system(size: 9, weight: .bold))
                             }
                             .frame(maxWidth: .infinity)
@@ -188,8 +197,18 @@ struct MenuBarView: View {
                 }
             }
         }
-        .onAppear { isVisible = true }
-        .onDisappear { isVisible = false }
+        .onAppear {
+            isVisible = true
+            homebrewManager.checkInstallations()
+            appState.startLatencyMonitoring()
+        }
+        .onDisappear { 
+            isVisible = false 
+            appState.stopLatencyMonitoring()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("RefreshInstallations"))) { _ in
+            homebrewManager.checkInstallations()
+        }
     }
     
     // Logic
@@ -205,15 +224,17 @@ struct MenuBarView: View {
     }
     
     var statusColor: Color {
+        if !appState.isInternetAvailable { return .gray }
         if appState.isConnecting { return .vexarOrange }
         if appState.isConnected { return .vexarGreen }
         return .vexarBlue
     }
     
     var statusText: String {
-        if appState.isConnecting { return "Bağlanıyor..." }
-        if appState.isConnected { return "Güvenli" }
-        return "Pasif"
+        if !appState.isInternetAvailable { return String(localized: "status_no_internet") }
+        if appState.isConnecting { return String(localized: "status_connecting") }
+        if appState.isConnected { return String(localized: "status_connected") }
+        return String(localized: "status_disconnected")
     }
 }
 
@@ -224,8 +245,8 @@ struct PulseCoreView: View {
     let isConnecting: Bool
     let color: Color
     var isVisible: Bool // Gating binding
+    var latency: Int = 0 
     
-    @State private var rotation: Double = 0
     @State private var pulse: CGFloat = 1.0
     
     var body: some View {
@@ -250,28 +271,67 @@ struct PulseCoreView: View {
                 }
                 
                 VStack(spacing: 4) {
-                    Text(isConnected ? "GÜVENLİ" : (isConnecting ? "BAĞLANIYOR..." : "HAZIR"))
+                    Text(isConnected ? String(localized: "status_secure") : (isConnecting ? String(localized: "status_connecting") : String(localized: "status_ready")))
                         .font(.system(size: 14, weight: .heavy, design: .monospaced))
                         .foregroundStyle(color)
                         .shadow(color: color.opacity(0.5), radius: 6)
                     
-                    Text(isConnected ? "Discord'u sorunsuzca kullanabilirsiniz." : "DPI Bypass için bağlanın.")
+                    Text(isConnected ? String(localized: "status_secure_message") : String(localized: "status_ready_message"))
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.white.opacity(0.7))
                         .multilineTextAlignment(.center)
                         .frame(width: 200)
+                        
+                    // Latency Indicator
+                    if isConnected && latency > 0 {
+                        HStack(spacing: 4) {
+                           Circle()
+                                .fill(latency < 100 ? Color.green : (latency < 200 ? Color.yellow : Color.red))
+                                .frame(width: 6, height: 6)
+                                .shadow(color: latency < 100 ? .green : .red, radius: 4)
+                            
+                            Text(String(format: String(localized: "latency_label"), latency))
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundStyle(.white.opacity(0.8))
+                        }
+                        .padding(.top, 6)
+                        .transition(.opacity)
+                    }
                 }
                 .offset(y: 10)
             }
         }
+        .onChange(of: isVisible) { newValue in
+            if newValue {
+                startAnimation()
+            } else {
+                stopAnimation()
+            }
+        }
         .onAppear {
             if isVisible {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
-                        pulse = 1.1
-                    }
-                }
+                startAnimation()
             }
+        }
+    }
+    
+    private func startAnimation() {
+        // Stop any existing animation first to be safe
+        withAnimation(.linear(duration: 0)) {
+            pulse = 1.0
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            guard isVisible else { return }
+            withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
+                pulse = 1.1
+            }
+        }
+    }
+    
+    private func stopAnimation() {
+        withAnimation(.linear(duration: 0.2)) {
+            pulse = 1.0
         }
     }
 }
