@@ -58,6 +58,15 @@
 "section_privacy" = "GİZLİLİK";
 "section_developer" = "GELİŞTİRİCİ";
 "section_danger_zone" = "TEHLİKELİ BÖLGE";
+"section_language" = "DİL";
+
+/* Settings - Language */
+"language_title" = "Uygulama Dili";
+"language_desc" = "Arayüz dilini değiştirin.";
+"language_restart_title" = "Yeniden Başlatma Gerekli";
+"language_restart_message" = "Dil değişikliğinin uygulanması için Vexar'ı yeniden başlatmanız gerekiyor.";
+"restart_now" = "Şimdi Başlat";
+"restart_later" = "Daha Sonra";
 
 /* Settings - Analytics */
 "analytics_title" = "Anonim Veri Toplama";

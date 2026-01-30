@@ -12,6 +12,20 @@ struct SettingsView: View {
     // Animation
     @State private var appearAnimation = false
     
+    // Language Selection
+    @State private var selectedLanguage: String = {
+        let languages = UserDefaults.standard.array(forKey: "AppleLanguages") as? [String] ?? []
+        let firstLang = languages.first ?? "tr"
+        if firstLang.starts(with: "tr") { return "tr" }
+        if firstLang.starts(with: "en") { return "en" }
+        return "tr"
+    }()
+    
+    private let languageOptions = [
+        ("tr", "🇹🇷 Türkçe"),
+        ("en", "🇬🇧 English")
+    ]
+    
     var body: some View {
         ZStack {
             // 1. Shared Living Background
@@ -46,6 +60,86 @@ struct SettingsView: View {
                 
                 ScrollView {
                     VStack(spacing: 24) {
+                        // Language Selector Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(String(localized: "section_language"))
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white.opacity(0.5))
+                            
+                            HStack {
+                                ZStack {
+                                    Circle()
+                                        .fill(LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
+                                        .frame(width: 32, height: 32)
+                                    
+                                    Image(systemName: "globe")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(.white)
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(String(localized: "language_title"))
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(.white)
+                                    Text(String(localized: "language_desc"))
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.white.opacity(0.6))
+                                }
+                                
+                                Spacer()
+                                
+                                // Language Picker - Clean Button Style
+                                Menu {
+                                    ForEach(languageOptions, id: \.0) { code, name in
+                                        Button {
+                                            if selectedLanguage != code {
+                                                let previousLanguage = selectedLanguage
+                                                selectedLanguage = code
+                                                UserDefaults.standard.set([code], forKey: "AppleLanguages")
+                                                UserDefaults.standard.synchronize()
+                                                showLanguageRestartAlert(revertTo: previousLanguage)
+                                            }
+                                        } label: {
+                                            if selectedLanguage == code {
+                                                Label(name, systemImage: "checkmark")
+                                            } else {
+                                                Text(name)
+                                            }
+                                        }
+                                    }
+                                } label: {
+                                    HStack(spacing: 6) {
+                                        Text(languageOptions.first(where: { $0.0 == selectedLanguage })?.1 ?? "🇹🇷 Türkçe")
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundColor(.white)
+                                        
+                                        // Custom minimal arrow
+                                        Image(systemName: "chevron.up.chevron.down")
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundColor(.white.opacity(0.4))
+                                    }
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color.white.opacity(0.1))
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                                    )
+                                }
+                                .menuStyle(.borderlessButton) // Removes native dropdown styling
+                                .menuIndicator(.hidden) // Hides the native double-arrow indicator
+                                .fixedSize() // Prevents layout shifts
+                            }
+                            .padding(12)
+                            .background(Color.black.opacity(0.2))
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(.white.opacity(0.1), lineWidth: 1)
+                            )
+                        }
+                        
                         // Setup Wizard Button (Moved to Top)
                         Button {
                             UserDefaults.standard.set(false, forKey: "onboardingDismissed")
@@ -738,6 +832,69 @@ struct SettingsView: View {
             Task {
                 await appState.dnsManager.measureAllLatencies()
             }
+        }
+    }
+    
+    /// Shows a native macOS alert for language restart (works outside popover)
+    private func showLanguageRestartAlert(revertTo oldLanguage: String) {
+        DispatchQueue.main.async {
+            let alert = NSAlert()
+            alert.messageText = String(localized: "language_restart_title")
+            alert.informativeText = String(localized: "language_restart_message")
+            alert.alertStyle = .informational
+            alert.addButton(withTitle: String(localized: "restart_now"))
+            alert.addButton(withTitle: String(localized: "restart_later"))
+            
+            let response = alert.runModal()
+            
+            if response == .alertFirstButtonReturn {
+                Self.relaunchApplication()
+            } else {
+                // User chose Later -> Revert changes
+                self.selectedLanguage = oldLanguage
+                UserDefaults.standard.set([oldLanguage], forKey: "AppleLanguages")
+                UserDefaults.standard.synchronize()
+            }
+        }
+    }
+    
+    /// Reliably relaunches the application
+    private static func relaunchApplication() {
+        let bundlePath = Bundle.main.bundlePath
+        
+        // Create a shell script in temp directory
+        let script = """
+        #!/bin/bash
+        sleep 1
+        open "\(bundlePath)"
+        """
+        
+        let tempPath = NSTemporaryDirectory() + "vexar_relaunch.sh"
+        
+        do {
+            try script.write(toFile: tempPath, atomically: true, encoding: .utf8)
+            
+            // Make it executable
+            let chmodTask = Process()
+            chmodTask.launchPath = "/bin/chmod"
+            chmodTask.arguments = ["+x", tempPath]
+            try chmodTask.run()
+            chmodTask.waitUntilExit()
+            
+            // Run the script
+            let task = Process()
+            task.launchPath = "/bin/bash"
+            task.arguments = [tempPath]
+            try task.run()
+            
+            // Terminate current instance
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                NSApplication.shared.terminate(nil)
+            }
+        } catch {
+            print("[Vexar] Relaunch failed: \(error)")
+            // Fallback: just terminate
+            NSApplication.shared.terminate(nil)
         }
     }
 }

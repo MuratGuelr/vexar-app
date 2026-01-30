@@ -51,6 +51,15 @@
 "section_privacy" = "PRIVACY";
 "section_developer" = "DEVELOPER";
 "section_danger_zone" = "DANGER ZONE";
+"section_language" = "LANGUAGE";
+
+/* Settings - Language */
+"language_title" = "App Language";
+"language_desc" = "Change interface language.";
+"language_restart_title" = "Restart Required";
+"language_restart_message" = "Vexar needs to restart for the language change to take effect.";
+"restart_now" = "Restart Now";
+"restart_later" = "Later";
 
 /* Settings - Analytics */
 "analytics_title" = "Anonymous Data Collection";

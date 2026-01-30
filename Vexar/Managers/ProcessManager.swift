@@ -346,10 +346,106 @@ final class ProcessManager: ObservableObject {
             
             let lines = output.components(separatedBy: .newlines)
                 .filter { !$0.isEmpty }
-                .map { "\(prefix)\($0)" }
+                .compactMap { self?.processLogLine($0, prefix: prefix) }
             
-            self?.queueLogs(lines)
+            if !lines.isEmpty {
+                self?.queueLogs(lines)
+            }
         }
+    }
+    
+    /// Processes raw spoofdpi log lines into user-friendly messages
+    /// - Returns: Processed message or nil if line should be filtered out
+    nonisolated private func processLogLine(_ line: String, prefix: String) -> String? {
+        // Strip ANSI color codes
+        let cleanLine = line.replacingOccurrences(of: "\\[\\d+m", with: "", options: .regularExpression)
+            .replacingOccurrences(of: "[", with: "")
+            .replacingOccurrences(of: "]", with: "")
+        
+        // Filter out ASCII art banner (SpoofDPI logo)
+        if cleanLine.contains("d8888b") || cleanLine.contains("Y88b") || cleanLine.contains("888") && cleanLine.count < 80 && !cleanLine.contains("INF") {
+            return nil
+        }
+        
+        // Filter out "Press CTRL+c" message
+        if cleanLine.contains("CTRL") || cleanLine.contains("Press") {
+            return nil
+        }
+        
+        // Translate common errors to Turkish
+        if cleanLine.contains("dns lookup failed") || cleanLine.contains("record not found") {
+            let domain = extractDomain(from: cleanLine)
+            return "⚪️ DNS bulunamadı: \(domain) (izleme servisi olabilir)"
+        }
+        
+        if cleanLine.contains("request blocked") {
+            let domain = extractDomain(from: cleanLine)
+            return "🛡️ İstek engellendi: \(domain)"
+        }
+        
+        if cleanLine.contains("connection refused") {
+            let domain = extractDomain(from: cleanLine)
+            return "⚪️ Bağlantı reddedildi: \(domain)"
+        }
+        
+        if cleanLine.contains("broken pipe") {
+            return nil // Filter out - too noisy and harmless
+        }
+        
+        if cleanLine.contains("timeout") || cleanLine.contains("timed out") {
+            let domain = extractDomain(from: cleanLine)
+            return "⏱️ Zaman aşımı: \(domain)"
+        }
+        
+        // Translate info messages
+        if cleanLine.contains("started spoofdpi") {
+            if let version = cleanLine.components(separatedBy: "version=").last?.components(separatedBy: " ").first {
+                return "🚀 SpoofDPI başlatıldı (v\(version))"
+            }
+            return "🚀 SpoofDPI başlatıldı"
+        }
+        
+        if cleanLine.contains("created a listener") {
+            if let port = cleanLine.components(separatedBy: ":").last?.trimmingCharacters(in: .whitespaces) {
+                return "🌐 Proxy dinleniyor: 127.0.0.1:\(port)"
+            }
+        }
+        
+        if cleanLine.contains("dns info") || cleanLine.contains("https info") || cleanLine.contains("policy") {
+            return nil // Filter technical details
+        }
+        
+        if cleanLine.contains("resolvers") || cleanLine.contains("udp") || cleanLine.contains("https") && cleanLine.contains("dst=") {
+            return nil // Filter resolver details
+        }
+        
+        if cleanLine.contains("query type") || cleanLine.contains("system") || cleanLine.contains("cache") || cleanLine.contains("split") || cleanLine.contains("fake") {
+            return nil // Filter config details
+        }
+        
+        // If it's a meaningful INF/WRN/ERR message we didn't catch, show it simplified
+        if cleanLine.contains("INF") || cleanLine.contains("WRN") || cleanLine.contains("ERR") {
+            // Already handled above, skip duplicates
+            return nil
+        }
+        
+        // Pass through other messages with prefix (like our own ✅ messages)
+        return "\(prefix)\(line)"
+    }
+    
+    /// Extracts domain name from log line
+    nonisolated private func extractDomain(from line: String) -> String {
+        // Try to find domain pattern
+        let components = line.components(separatedBy: " ")
+        for component in components {
+            if component.contains(".") && !component.contains("=") && !component.contains(":") && component.count > 4 {
+                let cleaned = component.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+                if cleaned.contains(".") {
+                    return cleaned
+                }
+            }
+        }
+        return "bilinmeyen"
     }
     
     nonisolated private func queueLogs(_ lines: [String]) {
